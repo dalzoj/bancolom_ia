@@ -1,0 +1,23 @@
+[project]
+name = "bancolom-ia"
+version = "1.0.0"
+description = ""
+authors = [
+    {name = "Diego Lizarazo",email = "imdlizarazo@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+]
+
+[tool.poetry]
+packages = [
+    {include = "backend"}
+]
+
+[tool.poetry.dependencies]
+python = ">=3.10"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
