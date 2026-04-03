@@ -24,4 +24,36 @@ class ConfigLoader:
  
         self._initialized = True
     
+    
+    ## HELPERS
+    def get(self, section, key):
+        return self._config.get(section, key)
+    def get_int(self, section, key):
+        return self._config.getint(section, key)
+    def get_float(self, section, key):
+        return self._config.getfloat(section, key)
+    def get_bool(self, section, key):
+        return self._config.getboolean(section, key)
+
+    
+    ## SCRAPPING
+    @property
+    def scraping_base_url(self):
+        return self.get("scraping", "base_url")
+    @property
+    def scraping_max_pages(self):
+        return self.get_int("scraping", "max_pages")
+    @property
+    def scraping_max_depth(self):
+        return self.get_int("scraping", "max_depth")
+    @property
+    def scraping_respect_robots(self):
+        return self.get_bool("scraping", "respect_robots")
+    @property
+    def scraping_delay(self):
+        return self.get_float("scraping", "delay")
+    @property
+    def scraping_output_path(self):
+        return self.get("scraping", "output_path")
+
 config = ConfigLoader()
