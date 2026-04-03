@@ -1,14 +1,15 @@
 import time
 import json
-import pandas as pd
 from datetime import datetime
-from backend.core.config_loader import config
-from playwright.sync_api import sync_playwright
-from urllib.robotparser import RobotFileParser
-from urllib.parse import urlparse, urljoin
 from pathlib import Path
-from bs4 import BeautifulSoup
+from urllib.parse import urlparse, urljoin
+from urllib.robotparser import RobotFileParser
 
+import pandas as pd
+from bs4 import BeautifulSoup
+from playwright.sync_api import sync_playwright
+
+from backend.core.config_loader import config
 
 class Finder():
     
