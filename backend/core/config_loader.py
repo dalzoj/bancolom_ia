@@ -55,5 +55,24 @@ class ConfigLoader:
     @property
     def scraping_output_path(self):
         return self.get("scraping", "output_path")
+    
+    
+    ## DB
+    @property
+    def db_provider(self):
+        return self.get("db", "provider")
+    
+    
+    ## SQL Lite
+    @property
+    def sql_lite_name(self):
+        return self.get("sql_lite", "sql_lite_name")
+    @property
+    def sql_lite_path(self):
+        return self.get("sql_lite", "sql_lite_path")
+    @property
+    def sql_lite_table(self):
+        return self.get("sql_lite", "sql_lite_table")
+
 
 config = ConfigLoader()
