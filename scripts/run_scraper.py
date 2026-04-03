@@ -1,3 +1,7 @@
+from pathlib import Path
+
+import pandas as pd
+
 from backend.scraping.finder import Finder
 from backend.scraping.cleaner import Cleander
 from backend.core.models import PrincipalData
@@ -7,24 +11,34 @@ from backend.core.config_loader import config
 
 def main():
     
-    principal_data = []
+    # Conectar con Base de Datos
+    
     db = DBFactory.create()
     
+    # Ejecutar el finder
     finder = Finder()
-    raw_pages = finder.find()
-    print(f'INFO: Se han guardado {len(raw_pages)} elementos.')
+    finder.find()
     
+    # Cargar información raw
+    raw_path = Path(config.scraping_output_path) / "raw_data.parquet"
+    df = pd.read_parquet(raw_path)
+    raw_pages = df.to_dict(orient="records")
+    print(f"INFO: Se cargaron {len(raw_pages)} elementos.")
+    
+    # Ejecutar el cleaner
     cleaner = Cleander()
+    principal_data = []
     for page in raw_pages:
         clean_text = cleaner.clean_page(page["url"], page["html"])
+        principal_data.append(PrincipalData(
+            url=page["url"],
+            title=page["title"],
+            extracted_date=page["extracted_date"],
+            clean_text=clean_text
+        ))
         
-        principal_data = PrincipalData(
-            url = page["url"],
-            title = page["title"],
-            extracted_date = page["extracted_date"],
-            clean_text = clean_text
-        )
-        
+    # Insertar información en DB
+    for data in principal_data:
         db.execute_query(
             f"""
             INSERT OR REPLACE INTO {config.sql_lite_table}
@@ -32,14 +46,14 @@ def main():
             VALUES
                 (:url, :title, :extracted_date, :clean_text)
             """, {
-                "url": principal_data.url,
-                "title": principal_data.title,
-                "extracted_date": principal_data.extracted_date,
-                "clean_text": principal_data.clean_text
-                }
+                "url": data.url,
+                "title": data.title,
+                "extracted_date": data.extracted_date,
+                "clean_text": data.clean_text
+            }
         )
-        
-    sample = db.execute_query(f"SELECT * FROM {config.sql_lite_table} LIMIT 5", ())
+    
+    sample = db.execute_query(f"SELECT * FROM {config.sql_lite_table} LIMIT 1", ())
     for row in sample:
         print(row)
 

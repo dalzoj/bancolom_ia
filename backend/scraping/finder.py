@@ -109,5 +109,3 @@ class Finder():
             browser.close()
             
         self._save_data(results)
-        
-        return results
