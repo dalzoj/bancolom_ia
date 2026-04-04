@@ -1,5 +1,8 @@
+import os
 import configparser
+
 from dotenv import load_dotenv
+
 
 class ConfigLoader:
     
@@ -34,9 +37,11 @@ class ConfigLoader:
         return self._config.getfloat(section, key)
     def get_bool(self, section, key):
         return self._config.getboolean(section, key)
+    def env(self, key):
+        return os.getenv(key)
 
     
-    ## SCRAPPING
+    ## SCRAPING
     @property
     def scraping_base_url(self):
         return self.get("scraping", "base_url")
@@ -73,6 +78,36 @@ class ConfigLoader:
     @property
     def sql_lite_table(self):
         return self.get("sql_lite", "sql_lite_table")
+    
+
+    ## VECTOR DB
+    @property
+    def vector_db_provider(self):
+        return self.get("vector_db", "provider")
+    @property
+    def vector_db_index(self):
+        return self.get("vector_db", "index")
+    @property
+    def vector_db_dimension(self):
+        return self.get_int("vector_db", "dimension")
+    @property
+    def vector_db_metric(self):
+        return self.get("vector_db", "metric")
+    @property
+    def vector_db_top_k(self):
+        return self.get_int("vector_db", "top_k")
+    
+    
+    ## EMBEDDING
+    @property
+    def embedding_provider(self):
+        return self.get("embedding", "provider")
+    @property
+    def embedding_model(self):
+        return self.get("embedding", "model")
+    @property
+    def embedding_dimension(self):
+        return self.get_int("embedding", "dimension")
 
 
 config = ConfigLoader()

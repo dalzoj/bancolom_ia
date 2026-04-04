@@ -1,6 +1,5 @@
 import time
-import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlparse, urljoin
 from urllib.robotparser import RobotFileParser
@@ -76,7 +75,6 @@ class Finder():
 
                 try:
                     page.goto(url, wait_until="domcontentloaded", timeout=30000)
-                    page.wait_for_load_state("domcontentloaded")
                     html = page.content()
                     title = page.title()
                 except Exception as e:
@@ -86,14 +84,13 @@ class Finder():
                 results.append({
                     "url": url,
                     "title": title,
-                    "extracted_date": datetime.utcnow().isoformat(),
+                    "extracted_date": datetime.now(timezone.utc).isoformat(),
                     "html": html.replace("\n", " ").replace("\r", " ")
                 })
  
                 print(f"INFO: Encontrado [{len(results)}/{self._max_pages}]: -> {url}")
  
                 soup = BeautifulSoup(html, "html.parser")
-                plain_text = soup.get_text(separator=" ", strip=True)
                 for a_tag in soup.find_all("a", href=True):
                     href = a_tag["href"]
                     full_url = self._normalize_url(url, href)

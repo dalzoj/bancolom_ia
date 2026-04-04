@@ -3,16 +3,15 @@ from pathlib import Path
 import pandas as pd
 
 from backend.scraping.finder import Finder
-from backend.scraping.cleaner import Cleander
+from backend.scraping.cleaner import Cleaner
 from backend.core.models import PrincipalData
-from backend.core.factories.db_factory import DBFactory
+from backend.factories.db_factory import DBFactory
 from backend.core.config_loader import config
 
 
 def main():
     
     # Conectar con Base de Datos
-    
     db = DBFactory.create()
     
     # Ejecutar el finder
@@ -26,7 +25,7 @@ def main():
     print(f"INFO: Se cargaron {len(raw_pages)} elementos.")
     
     # Ejecutar el cleaner
-    cleaner = Cleander()
+    cleaner = Cleaner()
     principal_data = []
     for page in raw_pages:
         clean_text = cleaner.clean_page(page["url"], page["html"])
@@ -52,10 +51,6 @@ def main():
                 "clean_text": data.clean_text
             }
         )
-    
-    sample = db.execute_query(f"SELECT * FROM {config.sql_lite_table} LIMIT 1", ())
-    for row in sample:
-        print(row)
 
 if __name__ == "__main__":
     main()

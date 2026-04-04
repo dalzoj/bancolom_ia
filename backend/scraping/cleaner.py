@@ -19,7 +19,7 @@ NOISE_CLASS_TAGS = [
     "promo", "advertisement", "modal", "popup"
 ]
 
-class Cleander ():
+class Cleaner ():
     
     def _normalize_data(self, text):
         text = re.sub(r"[ \t]+", " ", text)

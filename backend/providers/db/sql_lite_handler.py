@@ -1,11 +1,11 @@
 from pathlib import Path
 import sqlite3
 
-from backend.core.interfaces.db_interface import DBInterface
+from backend.interfaces.db_interface import DBInterface
 from backend.core.config_loader import config
 
 
-class SQLLiteHanlder(DBInterface):
+class SQLiteHandler(DBInterface):
     
     def __init__(self):
         self._db_name = Path(config.sql_lite_name)
