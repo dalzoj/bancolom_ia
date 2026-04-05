@@ -54,13 +54,13 @@ class Indexer:
         # Construir los vectores
         vectors = [
             VectorData(
-                id=f"{chunk.url}_chunk_{chunk.chunk_index}",
-                values=embedding,
-                url=chunk.url,
-                title=chunk.title,
-                extracted_date=chunk.extracted_date,
-                chunk_index=chunk.chunk_index,
-                chunk_text=chunk.chunk_text
+                id = f"{chunk.url}-chunk_{chunk.chunk_index}",
+                values = embedding,
+                url = chunk.url,
+                title = chunk.title,
+                extracted_date = chunk.extracted_date,
+                chunk_index = chunk.chunk_index,
+                chunk_text = chunk.chunk_text
             )
             for chunk, embedding in zip(chunks_data, embeddings)
         ]
