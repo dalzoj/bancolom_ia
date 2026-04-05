@@ -78,6 +78,9 @@ class ConfigLoader:
     @property
     def sql_lite_table(self):
         return self.get("sql_lite", "sql_lite_table")
+    @property
+    def sql_lite_conversation_table(self):
+        return self.get("sql_lite", "sql_lite_conversation_table")
     
 
     ## VECTOR DB
@@ -108,6 +111,27 @@ class ConfigLoader:
     @property
     def embedding_dimension(self):
         return self.get_int("embedding", "dimension")
+    
+    
+    ## LLM
+    @property
+    def llm_provider(self):
+        return self.get("llm", "provider")
+    @property
+    def llm_model(self):
+        return self.get("llm", "model")
+    @property
+    def llm_max_tokens(self):
+        return self.get_int("llm", "max_tokens")
+    @property
+    def llm_temperature(self):
+        return self.get_float("llm", "temperature")
+    
+    
+    ## PROMPT
+    @property
+    def prompt_name(self):
+        return self.get("prompt", "name")
 
 
 config = ConfigLoader()

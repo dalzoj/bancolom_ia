@@ -9,3 +9,7 @@ class EmbeddingInterface(ABC):
     @abstractmethod
     def embed_batch(self, data):
         pass
+    
+    @abstractmethod
+    def embed_query(self, query):
+        pass

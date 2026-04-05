@@ -39,3 +39,33 @@ class VectorData:
                 "chunk_text": self.chunk_text
             }
         }
+        
+@dataclass
+class SearchResult:
+    url: str
+    title: str
+    chunk_text: str
+    chunk_index: int
+    extracted_date: str
+    score: float
+
+
+@dataclass
+class LLMResponse:
+    content: str
+    input_tokens: int
+    output_tokens: int
+    model: str
+
+
+@dataclass
+class ConversationMessage:
+    conversation_id: str
+    message_id: int
+    message_timestamp: str
+    human_message: str
+    llm_response: str
+    input_tokens: int
+    output_tokens: int
+    model_name: str
+    prompt_version: str

@@ -16,5 +16,8 @@ class VectorDBInterface(ABC):
     
     @abstractmethod
     def filter_delete(self, filters):
-        pass   
+        pass
     
+    @abstractmethod
+    def semantic_search(self, query_vector, top_k):
+        pass

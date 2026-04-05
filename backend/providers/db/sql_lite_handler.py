@@ -10,7 +10,6 @@ class SQLiteHandler(DBInterface):
     def __init__(self):
         self._db_name = Path(config.sql_lite_name)
         self._db_path = Path(config.sql_lite_path)
-        self._db_table = config.sql_lite_table
         self._db_full_path = self._db_path / self._db_name
         self._conn = None
         self._locate_db()
@@ -19,13 +18,29 @@ class SQLiteHandler(DBInterface):
     def _create_table(self):
         self.execute_query(
             f"""
-            CREATE TABLE IF NOT EXISTS {self._db_table} (
+            CREATE TABLE IF NOT EXISTS {config.sql_lite_table} (
                 url TEXT PRIMARY KEY,
                 title TEXT,
                 extracted_date TEXT,
                 clean_text TEXT
-            )
-            """, ()
+            );
+            """
+        )
+        self.execute_query(
+            f"""
+            CREATE TABLE IF NOT EXISTS {config.sql_lite_conversation_table} (
+                conversation_id   TEXT NOT NULL,
+                message_id        INTEGER NOT NULL,
+                message_timestamp TEXT NOT NULL,
+                human_message     TEXT NOT NULL,
+                llm_response      TEXT,
+                input_tokens      INTEGER,
+                output_tokens     INTEGER,
+                model_name        TEXT,
+                prompt_version    TEXT,
+                PRIMARY KEY (conversation_id, message_id)
+            );
+            """
         )
         
     def _locate_db(self):
@@ -41,7 +56,7 @@ class SQLiteHandler(DBInterface):
         self._create_table()
         print(f"INFO: Conectado a SQLite en {self._db_full_path}")
 
-    def execute_query(self, query, values):
+    def execute_query(self, query, values = ()):
         print(f"INFO: Ejecutando query")
         cursor = self._conn.cursor()
         cursor.execute(query, values)

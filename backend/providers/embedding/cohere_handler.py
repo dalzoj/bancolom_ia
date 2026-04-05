@@ -31,3 +31,16 @@ class CohereHandler(EmbeddingInterface):
         except Exception as e:
             print(f"ERROR: No se pudo generar el batch de embeddings — {e}")
             return []
+        
+    def embed_query(self, query):
+        try:
+            response = self._client.embed(
+                texts = [query],
+                model = self._model,
+                input_type = "search_query",
+                embedding_types = ["float"]
+            )
+            return response.embeddings.float[0]
+        except Exception as e:
+            print(f"ERROR: No se pudo generar el embedding de la consulta — {e}")
+            return []

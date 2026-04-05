@@ -70,3 +70,28 @@ class PineconeHandler(VectorDBInterface):
             print(f"INFO: Vectores eliminados con filtros {filters}")
         except Exception as e:
             print(f"ERROR: No se pudo eliminar — {e}")
+            
+    def semantic_search(self, query_vector, top_k):
+        try:
+            index = self._client.Index(self._index_name)
+ 
+            results = index.query(
+                vector = query_vector,
+                top_k = top_k,
+                include_metadata = True
+            )
+ 
+            return [
+                {
+                    "url": match["metadata"].get("url", ""),
+                    "title": match["metadata"].get("title", ""),
+                    "chunk_text": match["metadata"].get("chunk_text", ""),
+                    "chunk_index": match["metadata"].get("chunk_index", 0),
+                    "extracted_date": match["metadata"].get("extracted_date", ""),
+                    "score": round(match["score"], 4)
+                }
+                for match in results["matches"]
+            ]
+        except Exception as e:
+            print(f"ERROR: No se pudo realizar la búsqueda semántica — {e}")
+            return []

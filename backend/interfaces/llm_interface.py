@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 
-class DBInterface(ABC):
+
+class LLMInterface(ABC):
 
     @abstractmethod
-    def _connect(self):
+    def health(self):
         pass
-    
+
     @abstractmethod
-    def execute_query(self, query, values):
+    def generate(self, messages, system):
         pass
