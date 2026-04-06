@@ -10,7 +10,7 @@ from playwright.sync_api import sync_playwright
 
 from backend.core.config_loader import config
 
-class Finder():
+class Finder:
     
     def __init__(self):
         self._base_url = config.scraping_base_url

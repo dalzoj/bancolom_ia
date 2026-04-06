@@ -19,7 +19,7 @@ NOISE_CLASS_TAGS = [
 ]
 
 
-class Cleaner ():
+class Cleaner:
     
     def _normalize_data(self, text):
         text = re.sub(r"[ \t]+", " ", text)
@@ -36,8 +36,8 @@ class Cleaner ():
                 element.decompose()
                 
         # Eliminar elementos de navegación o banners
-        for tag in NOISE_CLASS_TAGS:
-            for element in soup.find_all(tag):
+        for pattern in NOISE_CLASS_TAGS:
+            for element in soup.find_all(True, class_=re.compile(pattern, re.IGNORECASE)):
                 element.decompose()
                 
         # Extraer texto con jerarquía de encabezados

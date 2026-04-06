@@ -3,7 +3,7 @@ from backend.factories.vector_db_factory import VectorDBFactory
 from backend.core.config_loader import config
 
 
-class Retrieve:
+class Retriever:
 
     def __init__(self):
         self._embedder = EmbeddingFactory.create()
@@ -13,10 +13,11 @@ class Retrieve:
         if not self._embedder.health() or not self._vector_db.health():
             raise RuntimeError("ERROR: No se puede continuar, uno o más servicios no están disponibles.")
 
-    def retrieve(self, query):        
+    def retrieve(self, query, top_k):
         query = query.strip()
         query_embedding = self._embedder.embed_query(query)
-        results = self._vector_db.semantic_search(query_embedding, self._top_k)
-
+        k = top_k if top_k is not None else self._top_k
+        results = self._vector_db.semantic_search(query_embedding, k)
         print(f"INFO: Se han recuperado {len(results)} elementos.")
+        
         return results
