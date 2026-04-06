@@ -110,6 +110,14 @@ class AIAgent:
         
         # Recuperar contenido de Base de Datos Vectorial
         retrieval_results = self._retriever.retrieve(question)
+        sources = [
+            {
+                "url": item["url"],
+                "title": item["title"],
+                "category": item["category"],
+            }
+            for item in retrieval_results
+        ]
         retrieval_results = self._format_context(retrieval_results)
         
         # Constrir prompt
@@ -143,4 +151,5 @@ class AIAgent:
 
         return {
             "answer": llm_response.content,
+            "sources": sources,
         }
