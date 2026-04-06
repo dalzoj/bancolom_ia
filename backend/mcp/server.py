@@ -5,28 +5,88 @@ from fastmcp import FastMCP
 
 from backend.core.config_loader import config
 from backend.factories.db_factory import DBFactory
-from backend.mcp.tools.search_knowledge_base import search_knowledge_base
-from backend.mcp.tools.get_article_by_url import get_article_by_url
-from backend.mcp.tools.list_categories import list_categories
+from backend.mcp.tools.search_knowledge_base import search_knowledge_base as _search_knowledge_base
+from backend.mcp.tools.get_article_by_url import get_article_by_url as _get_article_by_url
+from backend.mcp.tools.list_categories import list_categories as _list_categories
 
 
 mcp = FastMCP(name="bancolombia-knowledge-base")
 
 @mcp.tool()
-def search_knowledge_base_tool(query, top_k):
-    result = search_knowledge_base(query, top_k)
+def search_knowledge_base_tool(query: str, top_k: int = 5, ) -> str:
+    """
+    Tool que busca documentos relevantes en la base de conocimiento
+    usando búsqueda semántica.
+    
+    Se usa cuando el usuario haga preguntas sobre productos, servicios,
+    condiciones, requisitos o cualquier información publicada en el sitio
+    web de Bancolombia para personas.
+    
+    Retorna los fragmentos más relevantes junto con su URL de origen,
+    categoría y score de relevancia.
+    
+    Args:
+        query: Pregunta o consulta en lenguaje natural del usuario.
+               Debe ser descriptiva para maximizar la precisión semántica.
+               Ejemplo: '¿Cuáles son los requisitos para un crédito de vivienda?'
+        top_k: Número máximo de documentos a retornar. Debe ser un entero
+               positivo entre 1 y 10. Por defecto retorna los 5 más relevantes.
+    
+    Returns:
+        JSON con 'total' y lista de 'results', donde cada resultado incluye: url, title, category,
+        score (0-1), chunk_text, chunk_index y extracted_date.
+        En caso de error retorna un campo 'error'.
+    """
+    
+    result = _search_knowledge_base(query, top_k)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 
 @mcp.tool()
-def get_article_by_url_tool(url):
-    result = get_article_by_url(url)
+def get_article_by_url_tool(url: str) -> str:
+    """
+    Tool que recupera el contenido completo de un artículo indexado a partir de su URL.
+    
+    Se usa cuando el usuario solicite información detallada de una página
+    específica de Bancolombia, cuando quiera leer un artículo completo,
+    o cuando necesites ampliar la información de un resultado obtenido
+    con search_knowledge_base_tool.
+    
+    La URL debe pertenecer al dominio www.bancolombia.com/personas.
+    
+    Args:
+        url: URL exacta de la página de Bancolombia indexada en la base de
+             conocimiento.
+             Ejemplo: 'https://www.bancolombia.com/personas/creditos/vivienda'
+    
+    Returns:
+        JSON con los campos: url, title, category, extracted_date y clean_text con el contenido completo del artículo.
+        En caso de no encontrarlo retorna un campo 'error'.
+    """
+    
+    result = _get_article_by_url(url)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 
 @mcp.tool()
-def list_categories_tool():
-    result = list_categories()
+def list_categories_tool() -> str:
+    """
+    Tool que lista todas las categorías de contenido disponibles en la base de conocimiento,
+    junto con el número de artículos por categoría.
+    
+    Se usa cuando el usuario pregunte qué temas o secciones cubre el asistente,
+    cuando necesites orientar al usuario sobre qué información está disponible,
+    o cuando quieras filtrar una búsqueda posterior por categoría relevante.
+    
+    No recibe parámetros.
+    
+    Returns:
+        JSON con 'total_categories' y lista de 'categories', donde cada elemento
+        incluye 'category' (nombre de la categoría) y 'total_articles' (cantidad de artículos indexados en esa categoría).
+        En caso de error retorna un campo 'error'.
+    """
+    
+    result = _list_categories()
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 

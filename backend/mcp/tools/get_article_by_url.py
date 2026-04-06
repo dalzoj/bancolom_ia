@@ -1,21 +1,52 @@
+import threading
+
 from backend.factories.db_factory import DBFactory
 from backend.core.config_loader import config
+from backend.interfaces.db_interface import DBInterface
 
+_ALLOWED_DOMAIN = "bancolombia.com"
 
 _db = None
+_db_lock = threading.Lock()
 
-def _get_db():
+def _get_db() -> DBInterface:
     global _db
     if _db is None:
-        _db = DBFactory.create()
+        with _db_lock:
+            if _db is None:
+                _db = DBFactory.create()
     return _db
 
-
-def get_article_by_url(url):
-
+def get_article_by_url(url: str) -> dict:
+    """
+    Recupera el contenido completo de un artículo indexado buscándolo
+    por su URL exacta en la base de datos relacional (SQLite).
+ 
+    Args:
+        url: URL exacta de una página de Bancolombia que haya sido
+             indexada previamente. Debe comenzar con 'http' y pertenecer
+             al dominio bancolombia.com.
+ 
+    Returns:
+        Diccionario con los campos: url, title, category, extracted_date
+        y clean_text con el contenido completo del artículo.
+        En caso de no encontrarlo o de error retorna un diccionario
+        con clave 'error'.
+    """
+    
+    if not isinstance(url, str):
+        return {"error": "El parámetro 'url' debe ser una cadena de texto."}
+ 
     url = url.strip()
+ 
     if not url:
         return {"error": "La URL no puede estar vacía."}
+    
+    if not url.startswith("http"):
+        return {"error": "La URL debe comenzar con 'http://' o 'https://'."}
+    
+    if _ALLOWED_DOMAIN not in url:
+        return {"error": f"La URL debe pertenecer al dominio '{_ALLOWED_DOMAIN}'."}
 
     try:
         db = _get_db()
@@ -30,9 +61,7 @@ def get_article_by_url(url):
         )
 
         if not rows:
-            return {
-                "error": f"No se encontró ningún artículo indexado con la URL: {url}"
-            }
+            return {"error": f"No se encontró ningún artículo indexado con la URL: {url}"}
 
         row = rows[0]
         return {
@@ -43,5 +72,8 @@ def get_article_by_url(url):
             "clean_text":     row["clean_text"],
         }
 
+    except TimeoutError as e:
+        return {"error": f"Tiempo de espera agotado al consultar la base de datos: {str(e)}"}
+    
     except Exception as e:
         return {"error": f"Error al recuperar el artículo: {str(e)}"}
