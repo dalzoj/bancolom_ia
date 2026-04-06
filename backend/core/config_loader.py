@@ -158,6 +158,12 @@ class ConfigLoader:
     @property
     def prompt_name(self):
         return self.get("prompt", "name")
-
+    
+    
+    # -- Conversation
+    @property
+    def conversation_history_limit(self):
+        return self.get("conversation", "history_limit")
+    
 
 config = ConfigLoader()

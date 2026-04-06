@@ -57,3 +57,4 @@ class ConversationMessage:
     output_tokens: int
     model_name: str
     prompt_version: str
+    interaction_time: float

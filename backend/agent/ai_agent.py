@@ -1,3 +1,4 @@
+import time
 from datetime import datetime, timezone
 
 from backend.factories.llm_factory import LLMFactory
@@ -28,7 +29,8 @@ class AIAgent:
                 :input_tokens,
                 :output_tokens,
                 :model_name,
-                :prompt_version
+                :prompt_version,
+                :interaction_time
             )
             """, {
             "conversation_id": message.conversation_id,
@@ -40,10 +42,10 @@ class AIAgent:
             "output_tokens": message.output_tokens,
             "model_name": message.model_name,
             "prompt_version": message.prompt_version,
+            "interaction_time": message.interaction_time
 
         })
         
-
     def _get_next_message_id(self, conversation_id):
         result = self._db.execute_query(
             f"""
@@ -54,14 +56,61 @@ class AIAgent:
             (conversation_id,),
         )
         return result[0]["next_id"]
+    
+    def _get_history(self, conversation_id):
+        limit = config.conversation_history_limit
+        result = self._db.execute_query(
+            f"""
+            SELECT human_message, llm_response
+            FROM {config.sql_lite_conversation_table}
+            WHERE conversation_id = ?
+            ORDER BY message_id DESC
+            LIMIT ?
+            """,
+            (conversation_id, limit),
+        )
+ 
+        if not result:
+            return None
 
-    def call(self, question, conversation_id = 0):
+        result = list(reversed(result))
+ 
+        conversation_elements = []
+        for conversation in result:
+            conversation_elements.append(f"Usuario: {conversation['human_message']}")
+            if conversation["llm_response"]:
+                conversation_elements.append(f"Asistente: {conversation['llm_response']}")
+ 
+        return "\n".join(conversation_elements)
+
+    def _format_context(self, results):
+        if not results:
+            return None
+
+        elements = []
         
-        #### ------------------ PROVISIONAL
-        history = None
+        for i, item in enumerate(results, start=1):
+            url   = item["url"] if isinstance(item, dict) else item.url
+            score = item["score"] if isinstance(item, dict) else item.score
+            text  = item["chunk_text"] if isinstance(item, dict) else item.chunk_text
+            elements.append(
+                f"-- Fuente {i} --\n"
+                f"URL: {url}\n"
+                f"Score: {score:.2f}\n"
+                f"{text.strip()}"
+            )
+        return "\n\n".join(elements)
+
+    def call(self, question, conversation_id):
+        
+        time_start = time.perf_counter()
+        
+        # Recuperar historial de conversación
+        history = self._get_history(conversation_id)
         
         # Recuperar contenido de Base de Datos Vectorial
         retrieval_results = self._retriever.retrieve(question)
+        retrieval_results = self._format_context(retrieval_results)
         
         # Constrir prompt
         system_prompt = self._prompt_loader.system_prompt
@@ -73,20 +122,22 @@ class AIAgent:
         
         # Generar respuesta del LLM
         llm_response = self._llm.generate(system_prompt, user_prompt)
+        interaction_time = time.perf_counter() - time_start
 
         # Persistir resultados
         message_id = self._get_next_message_id(conversation_id)
         self._save_message(
             ConversationMessage(
-                conversation_id = conversation_id,
-                message_id = message_id,
+                conversation_id=conversation_id,
+                message_id=message_id,
                 message_timestamp = datetime.now(timezone.utc).isoformat(),
-                human_message = question,
-                llm_response = llm_response.content,
-                input_tokens = llm_response.input_tokens,
-                output_tokens = llm_response.output_tokens,
-                model_name = llm_response.model,
-                prompt_version = self._prompt_loader.prompt_version,
+                human_message=question,
+                llm_response=llm_response.content,
+                input_tokens=llm_response.input_tokens,
+                output_tokens=llm_response.output_tokens,
+                model_name=llm_response.model,
+                prompt_version=self._prompt_loader.prompt_version,
+                interaction_time = round(interaction_time, 2),
             )
         )
 

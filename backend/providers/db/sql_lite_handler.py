@@ -52,6 +52,7 @@ class SQLiteHandler(DBInterface):
                 output_tokens INTEGER,
                 model_name TEXT,
                 prompt_version TEXT,
+                interaction_time REAL,
                 PRIMARY KEY (conversation_id, message_id)
             );
             """
