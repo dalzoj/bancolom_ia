@@ -48,9 +48,16 @@ class Finder():
     def _save_data(self, data):
         print(f"INFO: Guardando datos raw en: {self._output_path}")
         
-        df = pd.DataFrame(data, columns = ["url", "title", "extracted_date", "html"])
+        df = pd.DataFrame(data, columns = ["url", "title", "extracted_date", "category", "html"])
         df.to_csv(self._output_path/"raw_data.csv", index=False, encoding="utf-8", sep="|")
         df.to_parquet(self._output_path/"raw_data.parquet", index=False)
+        
+    def _extract_category(self, url):
+        path = urlparse(url).path
+        parts = [p for p in path.split("/") if p]
+        if len(parts) >= 2:
+            return parts[1]
+        return "general"
         
     def find(self):
         print(f"INFO: Iniciando buscador desde: {self._base_url}")
@@ -85,6 +92,7 @@ class Finder():
                     "url": url,
                     "title": title,
                     "extracted_date": datetime.now(timezone.utc).isoformat(),
+                    "category": self._extract_category(url),
                     "html": html.replace("\n", " ").replace("\r", " ")
                 })
  

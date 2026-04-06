@@ -26,7 +26,8 @@ class Indexer:
                     title=page.title,
                     extracted_date=page.extracted_date,
                     chunk_index=chunk_index,
-                    chunk_text=chunk_text
+                    chunk_text=chunk_text,
+                    category=page.category,
                 ))
                 
                 start += chunk_size - overlap
@@ -58,7 +59,8 @@ class Indexer:
                 title=chunk.title,
                 extracted_date=chunk.extracted_date,
                 chunk_index=chunk.chunk_index,
-                chunk_text=chunk.chunk_text
+                chunk_text=chunk.chunk_text,
+                category=chunk.category,
             )
             for chunk, embedding in zip(chunks_data, embeddings)
         ]

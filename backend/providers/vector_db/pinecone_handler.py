@@ -45,6 +45,7 @@ class PineconeHandler(VectorDBInterface):
                 "extracted_date": vector.extracted_date,
                 "chunk_index": vector.chunk_index,
                 "chunk_text": vector.chunk_text,
+                "category": vector.category,
             },
         }
         
@@ -106,6 +107,7 @@ class PineconeHandler(VectorDBInterface):
                     "chunk_text": match["metadata"].get("chunk_text", ""),
                     "chunk_index": match["metadata"].get("chunk_index", 0),
                     "extracted_date": match["metadata"].get("extracted_date", ""),
+                    "category": match["metadata"].get("category", "general"),
                     "score": round(match["score"], 4)
                 }
                 for match in results["matches"]

@@ -33,7 +33,8 @@ def main():
             url=page["url"],
             title=page["title"],
             extracted_date=page["extracted_date"],
-            clean_text=clean_text
+            clean_text=clean_text,
+            category=page["category"],
         ))
         
     # Insertar información en DB
@@ -41,14 +42,15 @@ def main():
         db.execute_query(
             f"""
             INSERT OR REPLACE INTO {config.sql_lite_data_table}
-                (url, title, extracted_date, clean_text)
+                (url, title, extracted_date, clean_text, category)
             VALUES
-                (:url, :title, :extracted_date, :clean_text)
+                (:url, :title, :extracted_date, :clean_text, :category)
             """, {
                 "url": data.url,
                 "title": data.title,
                 "extracted_date": data.extracted_date,
-                "clean_text": data.clean_text
+                "clean_text": data.clean_text,
+                "category": data.category,
             }
         )
 

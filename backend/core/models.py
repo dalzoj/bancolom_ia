@@ -6,6 +6,7 @@ class PrincipalData:
     title: str
     extracted_date: str
     clean_text: str
+    category: str 
 
 
 @dataclass
@@ -15,6 +16,7 @@ class ChunkData:
     extracted_date: str
     chunk_index: int
     chunk_text: str
+    category: str
     
     
 @dataclass
@@ -26,6 +28,7 @@ class VectorData:
     extracted_date: str
     chunk_index: int
     chunk_text: str
+    category: str
 
         
 @dataclass
@@ -36,6 +39,7 @@ class SearchResult:
     chunk_index: int
     extracted_date: str
     score: float
+    category: str
 
 
 @dataclass

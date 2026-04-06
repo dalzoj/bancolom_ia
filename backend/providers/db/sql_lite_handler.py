@@ -36,7 +36,8 @@ class SQLiteHandler(DBInterface):
                 url TEXT PRIMARY KEY,
                 title TEXT,
                 extracted_date TEXT,
-                clean_text TEXT
+                clean_text TEXT,
+                category TEXT DEFAULT 'general'
             );
             """
         )
@@ -58,7 +59,7 @@ class SQLiteHandler(DBInterface):
             """
         )
 
-    def execute_query(self, query, values = ()):
+    def execute_query(self, query, values=()):
         conn = self._connect()
         cursor = conn.cursor()
         cursor.execute(query, values)

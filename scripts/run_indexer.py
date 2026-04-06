@@ -18,7 +18,8 @@ def main():
             url=row["url"],
             title=row["title"],
             extracted_date=row["extracted_date"],
-            clean_text=row["clean_text"]
+            clean_text=row["clean_text"],
+            category=row["category"],
         )
         for row in data
     ]
