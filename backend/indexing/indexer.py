@@ -16,19 +16,17 @@ class Indexer:
         
         for page in data:
             words = page.clean_text.split()
-            start = 0
-            chunk_index = 0
+            start=0
+            chunk_index=0
             
             while start < len(words):
-                end = start + chunk_size
-                chunk_text = " ".join(words[start:end])
-                
+                chunk_text = " ".join(words[start:start + chunk_size])
                 chunks.append(ChunkData(
-                    url = page.url,
-                    title = page.title,
-                    extracted_date = page.extracted_date,
-                    chunk_index = chunk_index,
-                    chunk_text = chunk_text
+                    url=page.url,
+                    title=page.title,
+                    extracted_date=page.extracted_date,
+                    chunk_index=chunk_index,
+                    chunk_text=chunk_text
                 ))
                 
                 start += chunk_size - overlap
@@ -55,12 +53,12 @@ class Indexer:
         vectors = [
             VectorData(
                 id = f"{chunk.url}-chunk_{chunk.chunk_index}",
-                values = embedding,
-                url = chunk.url,
-                title = chunk.title,
-                extracted_date = chunk.extracted_date,
-                chunk_index = chunk.chunk_index,
-                chunk_text = chunk.chunk_text
+                values=embedding,
+                url=chunk.url,
+                title=chunk.title,
+                extracted_date=chunk.extracted_date,
+                chunk_index=chunk.chunk_index,
+                chunk_text=chunk.chunk_text
             )
             for chunk, embedding in zip(chunks_data, embeddings)
         ]

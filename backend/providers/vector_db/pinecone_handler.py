@@ -3,6 +3,11 @@ from pinecone import Pinecone, ServerlessSpec
 from backend.interfaces.vector_db_interface import VectorDBInterface
 from backend.core.config_loader import config
 
+_PINECONE_CLOUD = "aws"
+_PINECONE_REGION = "us-east-1"
+_UPSERT_BATCH_SIZE = 100
+
+
 class PineconeHandler(VectorDBInterface):
     
     def __init__(self):
@@ -20,11 +25,28 @@ class PineconeHandler(VectorDBInterface):
                 name = self._index_name,
                 dimension = self._dimension,
                 metric = self._metric,
-                spec = ServerlessSpec(cloud="aws", region="us-east-1")
+                spec = ServerlessSpec(cloud=_PINECONE_CLOUD, region=_PINECONE_REGION)
             )
             print(f"INFO: Índice '{self._index_name}' creado con dimensión {self._dimension}.")
         else:
             print(f"INFO: Índice '{self._index_name}' encontrado.")
+            
+    def _get_index_client(self):
+        return self._client.Index(self._index_name)
+            
+    @staticmethod
+    def to_pinecone_format(vector):
+        return {
+            "id": vector.id,
+            "values": vector.values,
+            "metadata": {
+                "url": vector.url,
+                "title": vector.title,
+                "extracted_date": vector.extracted_date,
+                "chunk_index": vector.chunk_index,
+                "chunk_text": vector.chunk_text,
+            },
+        }
         
     def health(self):
         try:
@@ -35,28 +57,27 @@ class PineconeHandler(VectorDBInterface):
             print(f"ERROR: Pinecone no disponible — {e}")
             return False
     
-    def upsert(self, vectors):
+    def upsert(self, vectors):        
         try:
-            index = self._client.Index(self._index_name)
-            
-            batch_size = 100
-            for i in range(0, len(vectors), batch_size):
-                batch = [v.to_pinecone_format() for v in vectors[i:i + batch_size]]
+            index = self._get_index_client()
+            total_batches = -(-len(vectors) // _UPSERT_BATCH_SIZE)
+
+            for batch_num, start in enumerate(range(0, len(vectors), _UPSERT_BATCH_SIZE), start=1):
+                batch = [self.to_pinecone_format(v) for v in vectors[start:start + _UPSERT_BATCH_SIZE]]
                 index.upsert(vectors=batch)
-                print(f"INFO: Insertado lote {i // batch_size + 1} de {-(-len(vectors) // batch_size)}")
-            
+                print(f"INFO: Insertado lote {batch_num} de {total_batches}")
+
             print(f"INFO: {len(vectors)} vectores insertados correctamente.")
         except Exception as e:
-            print(f"ERROR: No se pudo realizar el upsert — {e}")
+            print(f"ERROR: No se pudo realizar el upsert — {e}")   
 
     def filter_search(self, filters):
         try:
-            index = self._client.Index(self._index_name)
-            results = index.query(
-                vector = [0.0] * self._dimension,
-                top_k = 1,
-                filter = filters,
-                include_metadata = False
+            results = self._get_index_client().query(
+                vector=[0.0] * self._dimension,
+                top_k=1,
+                filter=filters,
+                include_metadata=False,
             )
             return len(results["matches"]) > 0
         except Exception as e:
@@ -65,22 +86,19 @@ class PineconeHandler(VectorDBInterface):
 
     def filter_delete(self, filters):
         try:
-            index = self._client.Index(self._index_name)
-            index.delete(filter=filters)
+            self._get_index_client().delete(filter=filters)
             print(f"INFO: Vectores eliminados con filtros {filters}")
         except Exception as e:
             print(f"ERROR: No se pudo eliminar — {e}")
             
     def semantic_search(self, query_vector, top_k):
         try:
-            index = self._client.Index(self._index_name)
- 
-            results = index.query(
-                vector = query_vector,
-                top_k = top_k,
-                include_metadata = True
+            results = self._get_index_client().query(
+                vector=query_vector,
+                top_k=top_k,
+                include_metadata=True,
             )
- 
+
             return [
                 {
                     "url": match["metadata"].get("url", ""),

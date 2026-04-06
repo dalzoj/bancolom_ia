@@ -6,9 +6,8 @@ from backend.core.config_loader import config
 class CohereHandler(EmbeddingInterface):
     
     def __init__(self):
-        self._client = Client(api_key=config.env("COHERE_API_KEY"))
-        self._model = config.embedding_model
-        self._dimension = config.embedding_dimension
+        self._client=Client(api_key=config.env("COHERE_API_KEY"))
+        self._model=config.embedding_model
         
     def health(self):
         try:
@@ -21,11 +20,11 @@ class CohereHandler(EmbeddingInterface):
 
     def embed_batch(self, data):
         try:
-            response = self._client.embed(
-                texts = data,
-                model = self._model,
-                input_type = "search_document",
-                embedding_types = ["float"]
+            response=self._client.embed(
+                texts=data,
+                model=self._model,
+                input_type="search_document",
+                embedding_types=["float"]
             )
             return response.embeddings.float
         except Exception as e:
@@ -34,11 +33,11 @@ class CohereHandler(EmbeddingInterface):
         
     def embed_query(self, query):
         try:
-            response = self._client.embed(
-                texts = [query],
-                model = self._model,
-                input_type = "search_query",
-                embedding_types = ["float"]
+            response=self._client.embed(
+                texts=[query],
+                model=self._model,
+                input_type="search_query",
+                embedding_types=["float"]
             )
             return response.embeddings.float[0]
         except Exception as e:

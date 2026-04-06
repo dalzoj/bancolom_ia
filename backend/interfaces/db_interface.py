@@ -1,10 +1,7 @@
 from abc import ABC, abstractmethod
 
-class DBInterface(ABC):
 
-    @abstractmethod
-    def _connect(self):
-        pass
+class DBInterface(ABC):
     
     @abstractmethod
     def execute_query(self, query, values):

@@ -1,5 +1,4 @@
 import re
-from pathlib import Path
 
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -19,6 +18,7 @@ NOISE_CLASS_TAGS = [
     "promo", "advertisement", "modal", "popup"
 ]
 
+
 class Cleaner ():
     
     def _normalize_data(self, text):
@@ -28,8 +28,6 @@ class Cleaner ():
         return text.strip()
     
     def clean_page(self, page_url, page_html):
-        
-        
         soup = BeautifulSoup(page_html, "html.parser")
         
         # Eliminar elementos de ruido

@@ -27,18 +27,6 @@ class VectorData:
     chunk_index: int
     chunk_text: str
 
-    def to_pinecone_format(self):
-        return {
-            "id": self.id,
-            "values": self.values,
-            "metadata": {
-                "url": self.url,
-                "title": self.title,
-                "extracted_date": self.extracted_date,
-                "chunk_index": self.chunk_index,
-                "chunk_text": self.chunk_text
-            }
-        }
         
 @dataclass
 class SearchResult:

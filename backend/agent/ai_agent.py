@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from backend.factories.llm_factory import LLMFactory
-from backend.rag.retriever import Retriever
+from backend.rag.retriever import Retrieve
 from backend.core.prompt_loader import PromptLoader
 from backend.factories.db_factory import DBFactory
 from backend.core.models import ConversationMessage
@@ -14,7 +14,7 @@ class AIAgent:
         self._llm = LLMFactory.create()
         self._db = DBFactory.create()
         self._prompt_loader = PromptLoader()
-        self._retriever = Retriever()
+        self._retriever = Retrieve()
 
     def _save_message(self, message):
         self._db.execute_query(
@@ -47,14 +47,13 @@ class AIAgent:
     def _get_next_message_id(self, conversation_id):
         result = self._db.execute_query(
             f"""
-            SELECT MAX(message_id) as max_id 
+            SELECT COALESCE(MAX(message_id), 0) + 1 AS next_id
             FROM {config.sql_lite_conversation_table}
             WHERE conversation_id = ?
             """,
-            (conversation_id,))
-        
-        current_max = result[0]["max_id"] if result else None
-        return (current_max + 1) if current_max is not None else 1
+            (conversation_id,),
+        )
+        return result[0]["next_id"]
 
     def call(self, question, conversation_id = 0):
         
@@ -62,11 +61,10 @@ class AIAgent:
         history = None
         
         # Recuperar contenido de Base de Datos Vectorial
-        retrieval_results = self._retriever.retriever(question)
+        retrieval_results = self._retriever.retrieve(question)
         
-        # Constrir prompting
+        # Constrir prompt
         system_prompt = self._prompt_loader.system_prompt
-        
         user_prompt = self._prompt_loader.create_user_prompt(
             history = history,
             context = retrieval_results,
