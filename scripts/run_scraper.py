@@ -40,7 +40,7 @@ def main():
     for data in principal_data:
         db.execute_query(
             f"""
-            INSERT OR REPLACE INTO {config.sql_lite_table}
+            INSERT OR REPLACE INTO {config.sql_lite_data_table}
                 (url, title, extracted_date, clean_text)
             VALUES
                 (:url, :title, :extracted_date, :clean_text)

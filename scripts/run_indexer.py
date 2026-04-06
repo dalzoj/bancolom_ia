@@ -10,7 +10,7 @@ def main():
     db = DBFactory.create()
     data = db.execute_query(
         f"""
-        SELECT * FROM {config.sql_lite_table};
+        SELECT * FROM {config.sql_lite_data_table};
         """
     )
     data = [
