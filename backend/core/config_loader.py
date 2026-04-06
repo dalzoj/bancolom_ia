@@ -163,7 +163,7 @@ class ConfigLoader:
     # -- Conversation
     @property
     def conversation_history_limit(self):
-        return self.get("conversation", "history_limit")
+        return self.get_int("conversation", "history_limit")
     
 
 config = ConfigLoader()
