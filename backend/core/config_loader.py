@@ -99,6 +99,10 @@ class ConfigLoader:
     def sql_lite_conversation_table(self):
         return self.get("sql_lite", "sql_lite_conversation_table")
     
+    @property
+    def sql_lite_summary_table(self):
+        return self.get("sql_lite", "sql_lite_summary_table")
+    
 
     # -- Base de Datos Vectorial
     @property
@@ -164,6 +168,10 @@ class ConfigLoader:
     @property
     def conversation_history_limit(self):
         return self.get_int("conversation", "history_limit")
+    
+    @property
+    def summary_every_turns(self):
+        return self.get_int("conversation", "summary_every_turns")
 
 
     # -- MCP

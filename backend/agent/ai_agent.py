@@ -14,6 +14,15 @@ from backend.core.models import ConversationMessage, LLMFirstTurnResponse, LLMRe
 from backend.core.config_loader import config
 
 
+_SUMMARY_SYSTEM_PROMPT = """
+Eres un asistente que genera resúmenes concisos de conversaciones.
+Tu tarea es resumir la conversación en máximo 5 oraciones, capturando:
+- Los temas y productos de Bancolombia consultados.
+- Las intenciones principales del usuario.
+- Cualquier información relevante mencionada.
+Responde ÚNICAMENTE con el resumen, sin introducción ni comentarios adicionales.
+""".strip()
+
 class AIAgent:
     
     def __init__(self):
@@ -158,6 +167,72 @@ class AIAgent:
                 conversation_elements.append(f"Asistente: {conversation['llm_response']}")
  
         return "\n".join(conversation_elements)
+    
+    def _get_summary(self, conversation_id):
+        result = self._db.execute_query(
+            f"""
+            SELECT summary_text, interactions
+            FROM {config.sql_lite_summary_table}
+            WHERE conversation_id = ?
+            LIMIT 1
+            """,
+            (conversation_id,),
+        )
+        
+        if not result:
+            return None, 0
+        
+        return result[0]["summary_text"], result[0]["interactions"]
+    
+    def _save_summary(self, conversation_id, summary_text, interactions):
+        self._db.execute_query(
+            f"""
+            INSERT INTO {config.sql_lite_summary_table}
+                (conversation_id, summary_text, interactions, update_date)
+            VALUES
+                (:conversation_id, :summary_text, :interactions, :update_date)
+            ON CONFLICT(conversation_id) DO UPDATE SET
+                summary_text = excluded.summary_text,
+                interactions = excluded.interactions,
+                update_date = excluded.update_date
+            """, {
+            "conversation_id": conversation_id,
+            "summary_text": summary_text,
+            "interactions": interactions,
+            "update_date": datetime.now(timezone.utc).isoformat(),
+        })
+    
+    def _should_summarize(self, conversation_id, current_message_id):
+        _, interactions = self._get_summary(conversation_id)
+        every_n = config.summary_every_turns
+        return current_message_id > 0 and current_message_id % every_n == 0
+    
+    def _create_summary(self, conversation_id, current_message_id):
+        rows = self._db.execute_query(
+            f"""
+            SELECT human_message, llm_response
+            FROM {config.sql_lite_conversation_table}
+            WHERE conversation_id = ?
+            ORDER BY message_id ASC
+            """,
+            (conversation_id,),
+        )
+        if not rows:
+            return
+        conversation_text = []
+        for row in rows:
+            conversation_text.append(f"Usuario: {row['human_message']}")
+            if row["llm_response"]:
+                conversation_text.append(f"Asistente: {row['llm_response']}")
+        full_conversation = "\n".join(conversation_text)
+        user_prompt = f"Resume la siguiente conversación:\n\n{full_conversation}"
+        response = self._llm.generate(_SUMMARY_SYSTEM_PROMPT, user_prompt)
+        self._save_summary(
+            conversation_id=conversation_id,
+            summary_text=response.content,
+            interactions=current_message_id,
+        )
+        print(f"INFO: Resumen de mediano plazo generado para sesión {conversation_id} ({current_message_id} turnos).")
 
     def _format_context(self, results):
         if not results:
@@ -180,8 +255,14 @@ class AIAgent:
     def call(self, question, conversation_id):
 
         time_start = time.perf_counter()
+        
+        # Calcular el id del próximo mensaje antes de persistir
+        next_message_id = self._get_next_message_id(conversation_id)
 
         # Recuperar historial de conversación (memoria de corto plazo)
+        if self._should_summarize(conversation_id, next_message_id):
+            self._create_summary(conversation_id, next_message_id)
+        summary, _ = self._get_summary(conversation_id)
         history = self._get_history(conversation_id)
 
         # Obtener tools disponibles del servidor MCP
@@ -190,6 +271,7 @@ class AIAgent:
         # Construir el mensaje de usuario con historial embebido
         system_prompt = self._prompt_loader.system_prompt
         user_content  = self._prompt_loader.create_user_prompt(
+            summary=summary,
             history=history,
             question=question,
         )
@@ -235,11 +317,10 @@ class AIAgent:
         ]
 
         # Persistir turno de conversación
-        message_id = self._get_next_message_id(conversation_id)
         self._save_message(
             ConversationMessage(
                 conversation_id=conversation_id,
-                message_id=message_id,
+                message_id=next_message_id,
                 message_timestamp=datetime.now(timezone.utc).isoformat(),
                 human_message=question,
                 llm_response=llm_response.content,

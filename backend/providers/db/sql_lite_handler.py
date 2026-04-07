@@ -58,6 +58,15 @@ class SQLiteHandler(DBInterface):
             );
             """
         )
+        self.execute_query(
+            f""" CREATE TABLE IF NOT EXISTS {config.sql_lite_summary_table} (
+                conversation_id TEXT PRIMARY KEY,
+                summary_text TEXT NOT NULL,
+                interactions INTEGER NOT NULL,
+                update_date TEXT NOT NULL
+            );
+            """
+        )
 
     def execute_query(self, query, values=()):
         conn = self._connect()
