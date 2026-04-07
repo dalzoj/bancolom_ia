@@ -296,6 +296,8 @@ class AIAgent:
             # Segundo llamado: el LLM genera la respuesta final con los resultados
             messages_with_results = self._build_tool_messages(messages, first_response, tool_results)
             llm_response = self._llm.final_step_generate(system_prompt, messages_with_results, mcp_tools)
+            
+            # Acumular tokens totales
             llm_response = LLMResponse(
                 content=llm_response.content,
                 input_tokens=first_response.input_tokens + llm_response.input_tokens,
