@@ -30,8 +30,6 @@ def search_knowledge_base_tool(query: str) -> str:
         query: Pregunta o consulta en lenguaje natural del usuario.
                Debe ser descriptiva para maximizar la precisión semántica.
                Ejemplo: '¿Cuáles son los requisitos para un crédito de vivienda?'
-        top_k: Número máximo de documentos a retornar. Debe ser un entero
-               positivo entre 1 y 10. Por defecto retorna los 5 más relevantes.
     
     Returns:
         JSON con 'total' y lista de 'results', donde cada resultado incluye: url, title, category,
@@ -93,6 +91,29 @@ def list_categories_tool() -> str:
 
 @mcp.resource("knowledgebase://stats")
 def knowledgebase_stats():
+    """
+    Resource que expone las estadísticas actuales de la base de conocimiento.
+
+    Se usa cuando el cliente necesite conocer el estado general del sistema:
+    total de documentos indexados, categorías disponibles, fecha de última
+    actualización y configuración del modelo de embeddings utilizado.
+
+    URI: knowledgebase://stats
+
+    Returns:
+        JSON con los campos:
+        - total_documents (int): número total de artículos indexados.
+        - total_categories (int): número de categorías distintas.
+        - categories (list[str]): nombres de las categorías disponibles.
+        - last_updated (str | None): fecha ISO 8601 de la extracción más reciente.
+        - embedding_model (str): nombre del modelo de embeddings configurado.
+        - embedding_dimension (int): dimensionalidad del modelo de embeddings.
+        - vector_db_provider (str): proveedor de base de datos vectorial en uso.
+        - vector_db_index (str): nombre del índice vectorial activo.
+        - generated_date (str): fecha ISO 8601 en que se generó esta respuesta.
+        En caso de error retorna un campo 'error' con el detalle.
+    """
+    
     print(f"INFO: Ejecutando estadísticas de base de conocimiento (knowledgebase_stats).", file=sys.stderr)
     try:
         db = DBFactory.create()
