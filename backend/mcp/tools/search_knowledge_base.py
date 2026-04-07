@@ -31,7 +31,8 @@ def search_knowledge_base(query: str) -> dict:
         title, category, score, chunk_text, chunk_index y extracted_date.
         En caso de error retorna un diccionario con clave 'error'.
     """
-
+    print(f"INFO: Ejecutando búsqueda semántica (search_knowledge_base).", file=sys.stderr)
+    
     if not isinstance(query, str):
         return {"error": "El parámetro 'query' debe ser una cadena de texto.", "results": []}
     
@@ -48,6 +49,8 @@ def search_knowledge_base(query: str) -> dict:
                 "message": "No se encontraron documentos relevantes para la consulta.",
                 "results": []
             }
+            
+        print(f"INFO: Se ha retornado {len(results)} registros de información.", file=sys.stderr)
 
         return {
             "total": len(results),

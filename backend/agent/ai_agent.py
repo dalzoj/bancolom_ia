@@ -284,14 +284,12 @@ class AIAgent:
         retrieval_results = []
 
         if first_response.has_tool_calls:
-            
             # Ejecución de tools
             _, tool_results = asyncio.run(self._run_mcp_turn(first_response.tool_calls))
-            
-            retrieval_results = []
+        
             for tool_call, result in tool_results:
                 if tool_call.tool_name == "search_knowledge_base_tool":
-                    retrieval_results = result.get("results", [])
+                    retrieval_results.extend(result.get("results", []))
 
             # Segundo llamado: el LLM genera la respuesta final con los resultados
             messages_with_results = self._build_tool_messages(messages, first_response, tool_results)

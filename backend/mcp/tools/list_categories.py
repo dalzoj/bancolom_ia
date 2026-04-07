@@ -1,3 +1,5 @@
+import sys
+
 import threading
 
 from backend.factories.db_factory import DBFactory
@@ -30,6 +32,7 @@ def list_categories() -> dict:
         Si no hay artículos retorna un 'message' informativo.
         En caso de error retorna un diccionario con clave 'error'.
     """
+    print(f"INFO: Ejecutando listado de categorias (list_categories).", file=sys.stderr)
     
     try:
         db = _get_db()
@@ -47,6 +50,8 @@ def list_categories() -> dict:
                 "message": "La base de conocimiento aún no contiene artículos indexados.",
                 "categories": []
             }
+            
+        print(f"INFO: Se ha retornado {len(rows)} categorias.", file=sys.stderr)
 
         return {
             "total_categories": len(rows),
