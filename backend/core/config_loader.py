@@ -164,6 +164,12 @@ class ConfigLoader:
     @property
     def conversation_history_limit(self):
         return self.get_int("conversation", "history_limit")
+
+
+    # -- MCP
+    @property
+    def mcp_server_path(self):
+        return self.get("mcp", "server_path")
     
 
 config = ConfigLoader()

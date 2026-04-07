@@ -2,6 +2,9 @@ from backend.factories.embedding_factory import EmbeddingFactory
 from backend.factories.vector_db_factory import VectorDBFactory
 from backend.core.models import ChunkData, VectorData
 
+_CHUNK_SIZE = 400
+_CHUNK_OVERLAP = 50
+
 
 class Indexer:
 
@@ -11,7 +14,7 @@ class Indexer:
         if not self._embedder.health() or not self._vector_db.health():
             raise RuntimeError("ERROR: No se puede continuar, uno o más servicios no están disponibles.")
         
-    def _generate_chunks_data(self, data, chunk_size = 400, overlap = 50):
+    def _generate_chunks_data(self, data, chunk_size = _CHUNK_SIZE, overlap = _CHUNK_OVERLAP):
         chunks = []
         
         for page in data:

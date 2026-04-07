@@ -1,11 +1,16 @@
+import asyncio
+import json
+import sys
 import time
 from datetime import datetime, timezone
 
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+
 from backend.factories.llm_factory import LLMFactory
-from backend.rag.retriever import Retrieve
 from backend.core.prompt_loader import PromptLoader
 from backend.factories.db_factory import DBFactory
-from backend.core.models import ConversationMessage
+from backend.core.models import ConversationMessage, LLMFirstTurnResponse, LLMResponse
 from backend.core.config_loader import config
 
 
@@ -15,7 +20,78 @@ class AIAgent:
         self._llm = LLMFactory.create()
         self._db = DBFactory.create()
         self._prompt_loader = PromptLoader()
-        self._retriever = Retrieve()
+        self._mcp_server_params = StdioServerParameters(
+            command=sys.executable,
+            args=[config.mcp_server_path],
+        )
+    
+    # -- MPC Helpers
+
+    async def _run_mcp_turn(self, tool_calls_to_execute):
+        async with stdio_client(self._mcp_server_params) as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+
+                # Listar tools
+                result = await session.list_tools()
+                mcp_tools = [
+                    {
+                        "type": "function",
+                        "function": {
+                            "name": tool.name,
+                            "description": tool.description or "",
+                            "parameters": tool.inputSchema or {
+                                "type": "object",
+                                "properties": {},
+                            },
+                        },
+                    }
+                    for tool in result.tools
+                ]
+
+                # Ejecutar las tool_calls si las hay
+                tool_results = []
+                for tool_call in tool_calls_to_execute:
+                    raw = await session.call_tool(tool_call.tool_name, tool_call.tool_args)
+                    if raw.isError:
+                        payload = {
+                            "error": f"El servidor MCP reportó un error en '{tool_call.tool_name}'.",
+                            "results": [],
+                        }
+                    else:
+                        payload = json.loads(raw.content[0].text)
+                    tool_results.append((tool_call, payload))
+
+                return mcp_tools, tool_results
+    
+    def _build_tool_messages(self, base_messages, first_response, tool_results):
+
+        messages = list(base_messages)
+
+        messages.append({
+            "role": "assistant",
+            "tool_calls": [
+                {
+                    "id": tc.id,
+                    "type": "function",
+                    "function": {
+                        "name": tc.tool_name,
+                        "arguments": json.dumps(tc.tool_args, ensure_ascii=False),
+                    },
+                }
+                for tc in first_response.tool_calls
+            ],
+            "tool_plan": first_response.tool_plan,
+        })
+
+        for tc, result in tool_results:
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tc.id,
+                "content": json.dumps(result, ensure_ascii=False),
+            })
+
+        return messages
 
     def _save_message(self, message):
         self._db.execute_query(
@@ -102,14 +178,53 @@ class AIAgent:
         return "\n\n".join(elements)
 
     def call(self, question, conversation_id):
-        
+
         time_start = time.perf_counter()
-        
-        # Recuperar historial de conversación
+
+        # Recuperar historial de conversación (memoria de corto plazo)
         history = self._get_history(conversation_id)
-        
-        # Recuperar contenido de Base de Datos Vectorial
-        retrieval_results = self._retriever.retrieve(question)
+
+        # Obtener tools disponibles del servidor MCP
+        mcp_tools, _ = asyncio.run(self._run_mcp_turn([]))
+
+        # Construir el mensaje de usuario con historial embebido
+        system_prompt = self._prompt_loader.system_prompt
+        user_content  = self._prompt_loader.create_user_prompt(
+            history=history,
+            question=question,
+        )
+        messages = [{"role": "user", "content": user_content}]
+
+        # Primer llamado: el LLM decide qué tool invocar o responde directo
+        first_response = self._llm.first_step_generate(system_prompt, messages, mcp_tools)
+
+        retrieval_results = []
+
+        if first_response.has_tool_calls:
+            
+            # Ejecución de tools
+            _, tool_results = asyncio.run(self._run_mcp_turn(first_response.tool_calls))
+            
+            retrieval_results = []
+            for tool_call, result in tool_results:
+                if tool_call.tool_name == "search_knowledge_base":
+                    retrieval_results = result.get("results", [])
+
+            # Segundo llamado: el LLM genera la respuesta final con los resultados
+            messages_with_results = self._build_tool_messages(messages, first_response, tool_results)
+            llm_response = self._llm.final_step_generate(system_prompt, messages_with_results, mcp_tools)
+
+        else:
+            # Respuesta sencilla del LLM
+            llm_response = LLMResponse(
+                content=first_response.content,
+                input_tokens=first_response.input_tokens,
+                output_tokens=first_response.output_tokens,
+                model=first_response.model,
+            )
+
+        interaction_time = time.perf_counter() - time_start
+
         sources = [
             {
                 "url": item["url"],
@@ -118,38 +233,25 @@ class AIAgent:
             }
             for item in retrieval_results
         ]
-        retrieval_results = self._format_context(retrieval_results)
-        
-        # Constrir prompt
-        system_prompt = self._prompt_loader.system_prompt
-        user_prompt = self._prompt_loader.create_user_prompt(
-            history = history,
-            context = retrieval_results,
-            question = question
-        )
-        
-        # Generar respuesta del LLM
-        llm_response = self._llm.generate(system_prompt, user_prompt)
-        interaction_time = time.perf_counter() - time_start
 
-        # Persistir resultados
+        # Persistir turno de conversación
         message_id = self._get_next_message_id(conversation_id)
         self._save_message(
             ConversationMessage(
                 conversation_id=conversation_id,
                 message_id=message_id,
-                message_timestamp = datetime.now(timezone.utc).isoformat(),
+                message_timestamp=datetime.now(timezone.utc).isoformat(),
                 human_message=question,
                 llm_response=llm_response.content,
                 input_tokens=llm_response.input_tokens,
                 output_tokens=llm_response.output_tokens,
                 model_name=llm_response.model,
                 prompt_version=self._prompt_loader.prompt_version,
-                interaction_time = round(interaction_time, 2),
+                interaction_time=round(interaction_time, 2),
             )
         )
 
         return {
-            "answer": llm_response.content,
+            "answer":  llm_response.content,
             "sources": sources,
         }

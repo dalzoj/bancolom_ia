@@ -15,10 +15,9 @@ class PromptLoader:
         with open(path, "r", encoding="utf-8") as f:
             return yaml.safe_load(f)
     
-    def create_user_prompt(self, history, context, question):
+    def create_user_prompt(self, history, question):
         return self._data["user_template"].format(
             history=history or "Sin historial previo en esta conversación.",
-            context=context or "Sin contexto recuperado.",
             question=question,
         ).strip()
 
