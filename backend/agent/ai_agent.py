@@ -33,6 +33,9 @@ class AIAgent:
             command=sys.executable,
             args=[config.mcp_server_path],
         )
+        
+        if not self._llm.health():
+            raise RuntimeError("El servicio LLM no está disponible.")
     
     # -- MPC Helpers
 
