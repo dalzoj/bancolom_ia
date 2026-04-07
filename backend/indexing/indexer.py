@@ -43,35 +43,41 @@ class Indexer:
     
     def _index(self, chunks_data):
         
-        # Validar si existe información respecto a la URL
-        urls = set(chunk.url for chunk in chunks_data)
-        for url in urls:
-            exists = self._vector_db.filter_search({"url": url})
-            if exists:
-                self._vector_db.filter_delete({"url": url})
-                print(f"INFO: URL existente, reemplazando {url}", file=sys.stderr)
-        
-        # Generar todos los embeddings en un solo request
-        texts = [chunk.chunk_text for chunk in chunks_data]
-        embeddings = self._embedder.embed_batch(texts)
-        
-        # Construir los vectores
-        vectors = [
-            VectorData(
-                id = f"{chunk.url}-chunk_{chunk.chunk_index}",
-                values=embedding,
-                url=chunk.url,
-                title=chunk.title,
-                extracted_date=chunk.extracted_date,
-                chunk_index=chunk.chunk_index,
-                chunk_text=chunk.chunk_text,
-                category=chunk.category,
-            )
-            for chunk, embedding in zip(chunks_data, embeddings)
-        ]
-        
-        # Insertar en la base de datos vectorial
-        self._vector_db.upsert(vectors)
+        # Agrupar chunks por URL
+        chunks_by_url = {}
+        for chunk in chunks_data:
+            chunks_by_url.setdefault(chunk.url, []).append(chunk)
+
+        # Recorrer agrupación por URL
+        for url, chunks in chunks_by_url.items():
+            try:
+                if self._vector_db.filter_search({"url": url}):
+                    self._vector_db.filter_delete({"url": url})
+                    print(f"INFO: URL existente, reemplazando {url}", file=sys.stderr)
+
+                texts = [chunk.chunk_text for chunk in chunks]
+                embeddings = self._embedder.embed_batch(texts)
+
+                vectors = [
+                    VectorData(
+                        id=f"{chunk.url}-chunk_{chunk.chunk_index}",
+                        values=embedding,
+                        url=chunk.url,
+                        title=chunk.title,
+                        extracted_date=chunk.extracted_date,
+                        chunk_index=chunk.chunk_index,
+                        chunk_text=chunk.chunk_text,
+                        category=chunk.category,
+                    )
+                    for chunk, embedding in zip(chunks, embeddings)
+                ]
+
+                self._vector_db.upsert(vectors)
+                print(f"INFO: Indexados {len(vectors)} chunks para {url}", file=sys.stderr)
+
+            except Exception as e:
+                print(f"ERROR: Falló la indexación de {url}, continuando con el siguiente. Detalle: {e}", file=sys.stderr)
+                continue
     
     def index_data(self, data):
         print(f"INFO: Indexación de datos.", file=sys.stderr)
