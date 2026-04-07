@@ -1,3 +1,4 @@
+import sys
 import json
 from datetime import datetime, timezone
 
@@ -92,6 +93,7 @@ def list_categories_tool() -> str:
 
 @mcp.resource("knowledgebase://stats")
 def knowledgebase_stats():
+    print(f"INFO: Ejecutando estadísticas de base de conocimiento (knowledgebase_stats).", file=sys.stderr)
     try:
         db = DBFactory.create()
 
