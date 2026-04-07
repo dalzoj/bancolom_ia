@@ -10,7 +10,7 @@ from mcp.client.stdio import stdio_client
 from backend.factories.llm_factory import LLMFactory
 from backend.core.prompt_loader import PromptLoader
 from backend.factories.db_factory import DBFactory
-from backend.core.models import ConversationMessage, LLMFirstTurnResponse, LLMResponse
+from backend.core.models import ConversationMessage, LLMResponse
 from backend.core.config_loader import config
 
 
@@ -232,7 +232,7 @@ class AIAgent:
             summary_text=response.content,
             interactions=current_message_id,
         )
-        print(f"INFO: Resumen de mediano plazo generado para sesión {conversation_id} ({current_message_id} turnos).")
+        print(f"INFO: Resumen de mediano plazo generado para sesión {conversation_id} ({current_message_id} turnos).", file=sys.stderr)
 
     def _format_context(self, results):
         if not results:
@@ -253,6 +253,7 @@ class AIAgent:
         return "\n\n".join(elements)
 
     def call(self, question, conversation_id):
+        print(f"INFO: Llamado al modelo generativo.", file=sys.stderr)
 
         time_start = time.perf_counter()
         
@@ -279,7 +280,7 @@ class AIAgent:
 
         # Primer llamado: el LLM decide qué tool invocar o responde directo
         first_response = self._llm.first_step_generate(system_prompt, messages, mcp_tools)
-
+        
         retrieval_results = []
 
         if first_response.has_tool_calls:
@@ -289,13 +290,13 @@ class AIAgent:
             
             retrieval_results = []
             for tool_call, result in tool_results:
-                if tool_call.tool_name == "search_knowledge_base":
+                if tool_call.tool_name == "search_knowledge_base_tool":
                     retrieval_results = result.get("results", [])
 
             # Segundo llamado: el LLM genera la respuesta final con los resultados
             messages_with_results = self._build_tool_messages(messages, first_response, tool_results)
             llm_response = self._llm.final_step_generate(system_prompt, messages_with_results, mcp_tools)
-
+            
         else:
             # Respuesta sencilla del LLM
             llm_response = LLMResponse(

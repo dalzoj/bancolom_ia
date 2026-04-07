@@ -13,7 +13,7 @@ from backend.mcp.tools.list_categories import list_categories as _list_categorie
 mcp = FastMCP(name="bancolombia-knowledge-base")
 
 @mcp.tool()
-def search_knowledge_base_tool(query: str, top_k: int = 5, ) -> str:
+def search_knowledge_base_tool(query: str) -> str:
     """
     Tool que busca documentos relevantes en la base de conocimiento
     usando búsqueda semántica.
@@ -38,7 +38,7 @@ def search_knowledge_base_tool(query: str, top_k: int = 5, ) -> str:
         En caso de error retorna un campo 'error'.
     """
     
-    result = _search_knowledge_base(query, top_k)
+    result = _search_knowledge_base(query)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 

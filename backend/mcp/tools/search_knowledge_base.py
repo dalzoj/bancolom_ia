@@ -1,9 +1,7 @@
+import sys
 import threading
 
 from backend.rag.retriever import Retriever
-
-_TOP_K_MIN = 1
-_TOP_K_MAX = 10
 
 _retriever = None
 _retriever_lock = threading.Lock()
@@ -17,7 +15,7 @@ def _get_retriever() -> Retriever:
     return _retriever
 
 
-def search_knowledge_base(query: str, top_k: int = 5) -> dict:
+def search_knowledge_base(query: str) -> dict:
     
     """
     Ejecuta una búsqueda semántica en la base de conocimiento vectorial
@@ -40,16 +38,10 @@ def search_knowledge_base(query: str, top_k: int = 5) -> dict:
     query = query.strip()
     if not query:
         return {"error": "La consulta no puede estar vacía.", "results": []}
-    
-    if not isinstance(top_k, int):
-        return {"error": f"El parámetro 'top_k' debe ser un entero entre {_TOP_K_MIN} y {_TOP_K_MAX}.", "results": []}
-    
-    if not (_TOP_K_MIN <= top_k <= _TOP_K_MAX):
-        return {"error": f"El parámetro 'top_k' debe estar entre {_TOP_K_MIN} y {_TOP_K_MAX}.", "results": []}
 
     try:
         retriever = _get_retriever()
-        results = retriever.retrieve(query, top_k)
+        results = retriever.retrieve(query)
 
         if not results:
             return {

@@ -1,3 +1,5 @@
+import sys
+
 import sqlite3
 import threading
 from pathlib import Path
@@ -16,9 +18,9 @@ class SQLiteHandler(DBInterface):
         self._db_path.mkdir(parents=True, exist_ok=True)
 
         if self._db_full_path.exists():
-            print(f'INFO: Base de datos encontrada en {self._db_full_path}')
+            print(f'INFO: Base de datos encontrada en {self._db_full_path}', file=sys.stderr)
         else:
-            print(f'INFO: Base de datos encontrada, creando en {self._db_full_path}')
+            print(f'INFO: Base de datos encontrada, creando en {self._db_full_path}', file=sys.stderr)
 
         self._create_tables()
 

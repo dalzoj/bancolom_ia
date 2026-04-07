@@ -1,3 +1,4 @@
+import sys
 import json
 
 from cohere import ClientV2
@@ -18,10 +19,10 @@ class CohereHandler(LLMInterface):
     def health(self):
         try:
             self._client.models.list()
-            print("INFO: Cohere LLM conectado correctamente.")
+            print("INFO: Cohere LLM conectado correctamente.", file=sys.stderr)
             return True
         except Exception as e:
-            print(f"ERROR: Cohere LLM no disponible — {e}")
+            print(f"ERROR: Cohere LLM no disponible — {e}", file=sys.stderr)
             return False
 
     def generate(self, system_prompt, user_prompt):
@@ -68,7 +69,7 @@ class CohereHandler(LLMInterface):
         content = None
         
         if response.message.content:
-            content = response.message.content[0].text
+            content = response.message.content[0].text           
         
         return LLMFirstTurnResponse(
             tool_calls=tool_calls,

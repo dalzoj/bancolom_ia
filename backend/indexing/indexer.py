@@ -1,3 +1,5 @@
+import sys
+
 from backend.factories.embedding_factory import EmbeddingFactory
 from backend.factories.vector_db_factory import VectorDBFactory
 from backend.core.models import ChunkData, VectorData
@@ -36,7 +38,7 @@ class Indexer:
                 start += chunk_size - overlap
                 chunk_index += 1
         
-        print(f"INFO: Se generaron {len(chunks)} chunks de {len(data)} elementos.")
+        print(f"INFO: Se generaron {len(chunks)} chunks de {len(data)} elementos.", file=sys.stderr)
         return chunks
     
     def _index(self, chunks_data):
@@ -47,7 +49,7 @@ class Indexer:
             exists = self._vector_db.filter_search({"url": url})
             if exists:
                 self._vector_db.filter_delete({"url": url})
-                print(f"INFO: URL existente, reemplazando {url}")
+                print(f"INFO: URL existente, reemplazando {url}", file=sys.stderr)
         
         # Generar todos los embeddings en un solo request
         texts = [chunk.chunk_text for chunk in chunks_data]
@@ -72,7 +74,7 @@ class Indexer:
         self._vector_db.upsert(vectors)
     
     def index_data(self, data):
-        print(f"INFO: Indexación de datos.")
+        print(f"INFO: Indexación de datos.", file=sys.stderr)
         
         chunk_data = self._generate_chunks_data(data)
         self._index(chunk_data)

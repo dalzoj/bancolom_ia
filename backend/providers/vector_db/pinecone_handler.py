@@ -1,3 +1,5 @@
+import sys
+
 from pinecone import Pinecone, ServerlessSpec
 
 from backend.interfaces.vector_db_interface import VectorDBInterface
@@ -15,7 +17,6 @@ class PineconeHandler(VectorDBInterface):
         self._index_name = config.vector_db_index
         self._dimension = config.vector_db_dimension
         self._metric = config.vector_db_metric
-        self._top_k = config.vector_db_top_k
         self._check_index()
         
     def _check_index(self):
@@ -27,9 +28,9 @@ class PineconeHandler(VectorDBInterface):
                 metric = self._metric,
                 spec = ServerlessSpec(cloud=_PINECONE_CLOUD, region=_PINECONE_REGION)
             )
-            print(f"INFO: Índice '{self._index_name}' creado con dimensión {self._dimension}.")
+            print(f"INFO: Índice '{self._index_name}' creado con dimensión {self._dimension}.", file=sys.stderr)
         else:
-            print(f"INFO: Índice '{self._index_name}' encontrado.")
+            print(f"INFO: Índice '{self._index_name}' encontrado.", file=sys.stderr)
             
     def _get_index_client(self):
         return self._client.Index(self._index_name)
@@ -52,10 +53,10 @@ class PineconeHandler(VectorDBInterface):
     def health(self):
         try:
             self._client.list_indexes()
-            print("INFO: Pinecone conectado correctamente.")
+            print("INFO: Pinecone conectado correctamente.", file=sys.stderr)
             return True
         except Exception as e:
-            print(f"ERROR: Pinecone no disponible — {e}")
+            print(f"ERROR: Pinecone no disponible — {e}", file=sys.stderr)
             return False
     
     def upsert(self, vectors):        
@@ -66,11 +67,11 @@ class PineconeHandler(VectorDBInterface):
             for batch_num, start in enumerate(range(0, len(vectors), _UPSERT_BATCH_SIZE), start=1):
                 batch = [self.to_pinecone_format(v) for v in vectors[start:start + _UPSERT_BATCH_SIZE]]
                 index.upsert(vectors=batch)
-                print(f"INFO: Insertado lote {batch_num} de {total_batches}")
+                print(f"INFO: Insertado lote {batch_num} de {total_batches}", file=sys.stderr)
 
-            print(f"INFO: {len(vectors)} vectores insertados correctamente.")
+            print(f"INFO: {len(vectors)} vectores insertados correctamente.", file=sys.stderr)
         except Exception as e:
-            print(f"ERROR: No se pudo realizar el upsert — {e}")   
+            print(f"ERROR: No se pudo realizar el upsert — {e}", file=sys.stderr)
 
     def filter_search(self, filters):
         try:
@@ -82,23 +83,25 @@ class PineconeHandler(VectorDBInterface):
             )
             return len(results["matches"]) > 0
         except Exception as e:
-            print(f"ERROR: No se pudo buscar — {e}")
+            print(f"ERROR: No se pudo buscar — {e}", file=sys.stderr)
             return False
 
     def filter_delete(self, filters):
         try:
             self._get_index_client().delete(filter=filters)
-            print(f"INFO: Vectores eliminados con filtros {filters}")
+            print(f"INFO: Vectores eliminados con filtros {filters}", file=sys.stderr)
         except Exception as e:
-            print(f"ERROR: No se pudo eliminar — {e}")
+            print(f"ERROR: No se pudo eliminar — {e}", file=sys.stderr)
             
     def semantic_search(self, query_vector, top_k):
+        print(f"INFO: Realizando búsqueda semántica.", file=sys.stderr)
         try:
             results = self._get_index_client().query(
                 vector=query_vector,
                 top_k=top_k,
                 include_metadata=True,
             )
+            print(f"INFO: Se han recuperado {len(results['matches'])} elementos.", file=sys.stderr)
 
             return [
                 {
@@ -113,5 +116,5 @@ class PineconeHandler(VectorDBInterface):
                 for match in results["matches"]
             ]
         except Exception as e:
-            print(f"ERROR: No se pudo realizar la búsqueda semántica — {e}")
+            print(f"ERROR: No se pudo realizar la búsqueda semántica — {e}", file=sys.stderr)
             return []

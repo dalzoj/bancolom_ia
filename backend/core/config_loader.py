@@ -126,6 +126,24 @@ class ConfigLoader:
         return self.get_int("vector_db", "top_k")
     
     
+    # -- Reranking
+    @property
+    def reranking_provider(self):
+        return self.get("reranking", "provider")
+    
+    @property
+    def reranking_enabled(self):
+        return self.get_bool("reranking", "enabled")
+
+    @property
+    def reranking_top_n(self):
+        return self.get_int("reranking", "top_n")
+
+    @property
+    def reranking_model(self):
+        return self.get("reranking", "model")
+    
+    
     # -- Embedding
     @property
     def embedding_provider(self):

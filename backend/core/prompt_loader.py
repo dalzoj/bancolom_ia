@@ -1,3 +1,5 @@
+import sys
+
 import yaml
 
 from backend.core.config_loader import config
@@ -10,7 +12,7 @@ class PromptLoader:
         self._data = self._load()
         
     def _load(self):
-        print(f'INFO: Cargado modelo {self._name}')
+        print(f'INFO: Cargado modelo {self._name}', file=sys.stderr)
         path = f"backend/prompts/{self._name}.yml"
         with open(path, "r", encoding="utf-8") as f:
             return yaml.safe_load(f)
