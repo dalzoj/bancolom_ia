@@ -1,13 +1,15 @@
 import pytest
 from unittest.mock import patch
 
+
 @pytest.fixture
 def agent():
-    with patch("backend.agent.ai_agent.LLMFactory") as mock_llm, \
-         patch("backend.agent.ai_agent.DBFactory"), \
-         patch("backend.agent.ai_agent.PromptLoader"), \
-         patch("backend.agent.ai_agent.config") as mock_cfg:
-
+    with (
+        patch("backend.agent.ai_agent.LLMFactory") as mock_llm,
+        patch("backend.agent.ai_agent.DBFactory"),
+        patch("backend.agent.ai_agent.PromptLoader"),
+        patch("backend.agent.ai_agent.config") as mock_cfg,
+    ):
         mock_cfg.mcp_server_path = "server.py"
         mock_cfg.sql_lite_conversation_table = "conversations"
         mock_cfg.sql_lite_summary_table = "summaries"
@@ -17,18 +19,22 @@ def agent():
         mock_llm.create.return_value.health.return_value = True
 
         from backend.agent.ai_agent import AIAgent
+
         return AIAgent()
 
-def test_agent_raises_if_llm_unavailable():
-    with patch("backend.agent.ai_agent.LLMFactory") as mock_llm_factory, \
-         patch("backend.agent.ai_agent.DBFactory"), \
-         patch("backend.agent.ai_agent.PromptLoader"), \
-         patch("backend.agent.ai_agent.config") as mock_cfg:
 
+def test_agent_raises_if_llm_unavailable():
+    with (
+        patch("backend.agent.ai_agent.LLMFactory") as mock_llm_factory,
+        patch("backend.agent.ai_agent.DBFactory"),
+        patch("backend.agent.ai_agent.PromptLoader"),
+        patch("backend.agent.ai_agent.config") as mock_cfg,
+    ):
         mock_cfg.mcp_server_path = "server.py"
         mock_llm_factory.create.return_value.health.return_value = False
 
         from backend.agent.ai_agent import AIAgent
+
         with pytest.raises(RuntimeError, match="LLM no está disponible"):
             AIAgent()
 
@@ -38,7 +44,13 @@ def test_format_context_lista_vacia(agent):
 
 
 def test_format_context_contiene_url_y_score(agent):
-    items = [{"url": "https://bancolombia.com/creditos", "score": 0.85, "chunk_text": "Texto de prueba"}]
+    items = [
+        {
+            "url": "https://bancolombia.com/creditos",
+            "score": 0.85,
+            "chunk_text": "Texto de prueba",
+        }
+    ]
     result = agent._format_context(items)
 
     assert "https://bancolombia.com/creditos" in result
@@ -99,7 +111,10 @@ def test_get_history_sin_mensajes_retorna_none(agent):
 
 def test_get_history_incluye_mensaje_usuario_y_respuesta(agent):
     agent._db.execute_query.return_value = [
-        {"human_message": "¿Qué tasas tienen?", "llm_response": "Las tasas dependen del producto."}
+        {
+            "human_message": "¿Qué tasas tienen?",
+            "llm_response": "Las tasas dependen del producto.",
+        }
     ]
     res = agent._get_history("conv-1")
     assert "¿Qué tasas tienen?" in res

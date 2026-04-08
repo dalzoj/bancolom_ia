@@ -10,8 +10,8 @@ from playwright.sync_api import sync_playwright
 
 from backend.core.config_loader import config
 
-class Finder:
 
+class Finder:
     def __init__(self):
         self._base_url = config.scraping_base_url
         self._domain = urlparse(self._base_url).netloc
@@ -48,9 +48,13 @@ class Finder:
     def _save_data(self, data):
         print(f"INFO: Guardando datos raw en: {self._output_path}")
 
-        df = pd.DataFrame(data, columns = ["url", "title", "extracted_date", "category", "html"])
-        df.to_csv(self._output_path/"raw_data.csv", index=False, encoding="utf-8", sep="|")
-        df.to_parquet(self._output_path/"raw_data.parquet", index=False)
+        df = pd.DataFrame(
+            data, columns=["url", "title", "extracted_date", "category", "html"]
+        )
+        df.to_csv(
+            self._output_path / "raw_data.csv", index=False, encoding="utf-8", sep="|"
+        )
+        df.to_parquet(self._output_path / "raw_data.parquet", index=False)
 
     def _extract_category(self, url):
         path = urlparse(url).path
@@ -88,13 +92,15 @@ class Finder:
                     print(f"ERROR: No se puede extraer la página {url} — {e}")
                     continue
 
-                results.append({
-                    "url": url,
-                    "title": title,
-                    "extracted_date": datetime.now(timezone.utc).isoformat(),
-                    "category": self._extract_category(url),
-                    "html": html.replace("\n", " ").replace("\r", " ")
-                })
+                results.append(
+                    {
+                        "url": url,
+                        "title": title,
+                        "extracted_date": datetime.now(timezone.utc).isoformat(),
+                        "category": self._extract_category(url),
+                        "html": html.replace("\n", " ").replace("\r", " "),
+                    }
+                )
 
                 print(f"INFO: Encontrado [{len(results)}/{self._max_pages}]: -> {url}")
 

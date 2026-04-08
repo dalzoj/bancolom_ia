@@ -14,12 +14,11 @@ from backend.core.config_loader import config
 
 st.set_page_config(page_title="Asistente Bancolombia", layout="centered")
 
+
 # Recurso de MCP
 async def _fetch_stats():
     params = StdioServerParameters(
-        command=sys.executable,
-        args=[config.mcp_server_path],
-        env=os.environ
+        command=sys.executable, args=[config.mcp_server_path], env=os.environ
     )
     async with stdio_client(params) as (read, write):
         async with ClientSession(read, write) as session:
@@ -27,12 +26,14 @@ async def _fetch_stats():
             result = await session.read_resource("knowledgebase://stats")
             return json.loads(result.contents[0].text)
 
+
 @st.cache_data(ttl=300)
 def get_kb_stats():
     try:
         return asyncio.run(_fetch_stats())
     except Exception as e:
         return {"error": str(e)}
+
 
 def render_kb_panel():
     stats = get_kb_stats()
@@ -50,6 +51,7 @@ def render_kb_panel():
             for cat in stats.get("categories", []):
                 st.markdown(f"- {cat}")
 
+
 def render_sources(sources):
     if not sources:
         return
@@ -58,12 +60,14 @@ def render_sources(sources):
             label = source.get("title") or source.get("url")
             st.markdown(f"- [{label}]({source['url']})")
 
+
 def render_history():
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.write(msg["content"])
             if msg["role"] == "assistant":
                 render_sources(msg.get("sources", []))
+
 
 def check_auth():
     st.title("Asistente Bancolombia")
@@ -77,17 +81,21 @@ def check_auth():
         else:
             st.error("Contraseña incorrecta. Intenta de nuevo.")
 
+
 def init_session():
     if "conversation_id" not in st.session_state:
         st.session_state.conversation_id = str(int(time.time() * 1000))
         st.session_state.messages = []
         st.session_state.agent = AIAgent()
 
+
 def handle_input(user_input: str):
-    st.session_state.messages.append({
-        "role": "user",
-        "content": user_input,
-    })
+    st.session_state.messages.append(
+        {
+            "role": "user",
+            "content": user_input,
+        }
+    )
 
     with st.chat_message("user"):
         st.write(user_input)
@@ -102,11 +110,14 @@ def handle_input(user_input: str):
         st.write(response["answer"])
         render_sources(response.get("sources", []))
 
-    st.session_state.messages.append({
-        "role": "assistant",
-        "content": response["answer"],
-        "sources": response.get("sources", []),
-    })
+    st.session_state.messages.append(
+        {
+            "role": "assistant",
+            "content": response["answer"],
+            "sources": response.get("sources", []),
+        }
+    )
+
 
 def main():
     if not st.session_state.get("authenticated"):
@@ -123,7 +134,9 @@ def main():
 
     render_history()
 
-    user_input = st.chat_input("Escribe tu pregunta sobre productos y servicios de Bancolombia...")
+    user_input = st.chat_input(
+        "Escribe tu pregunta sobre productos y servicios de Bancolombia..."
+    )
     if user_input:
         handle_input(user_input)
 

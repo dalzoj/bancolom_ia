@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 CATEGORIAS_EJEMPLO = [
     {"category": "creditos", "total": 15},
-    {"category": "ahorro",   "total": 8},
+    {"category": "ahorro", "total": 8},
 ]
 
 

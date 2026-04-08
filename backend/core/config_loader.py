@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 
 
 class ConfigLoader:
-
     _instance = None
     _lock = threading.Lock()
 
@@ -19,19 +18,18 @@ class ConfigLoader:
         return cls._instance
 
     def __init__(self):
-            with self._lock:
-                if self._initialized:
-                    return
+        with self._lock:
+            if self._initialized:
+                return
 
-                # Cargar .env
-                load_dotenv(".env")
+            # Cargar .env
+            load_dotenv(".env")
 
-                # Cargar config.cfg
-                self._config = configparser.ConfigParser()
-                self._config.read("config/config.cfg")
+            # Cargar config.cfg
+            self._config = configparser.ConfigParser()
+            self._config.read("config/config.cfg")
 
-                self._initialized = True
-
+            self._initialized = True
 
     # -- Helpers
     def get(self, section, key):
@@ -48,7 +46,6 @@ class ConfigLoader:
 
     def env(self, key):
         return os.getenv(key)
-
 
     # -- Scraping
     @property
@@ -75,12 +72,10 @@ class ConfigLoader:
     def scraping_output_path(self):
         return self.get("scraping", "output_path")
 
-
     # -- DB
     @property
     def db_provider(self):
         return self.get("db", "provider")
-
 
     # -- SQLite
     @property
@@ -103,7 +98,6 @@ class ConfigLoader:
     def sql_lite_summary_table(self):
         return self.get("sql_lite", "sql_lite_summary_table")
 
-
     # -- Base de Datos Vectorial
     @property
     def vector_db_provider(self):
@@ -125,7 +119,6 @@ class ConfigLoader:
     def vector_db_top_k(self):
         return self.get_int("vector_db", "top_k")
 
-
     # -- Reranking
     @property
     def reranking_provider(self):
@@ -143,7 +136,6 @@ class ConfigLoader:
     def reranking_model(self):
         return self.get("reranking", "model")
 
-
     # -- Embedding
     @property
     def embedding_provider(self):
@@ -156,7 +148,6 @@ class ConfigLoader:
     @property
     def embedding_dimension(self):
         return self.get_int("embedding", "dimension")
-
 
     # -- LLM
     @property
@@ -175,12 +166,10 @@ class ConfigLoader:
     def llm_temperature(self):
         return self.get_float("llm", "temperature")
 
-
     # -- Prompt
     @property
     def prompt_name(self):
         return self.get("prompt", "name")
-
 
     # -- Conversation
     @property
@@ -190,7 +179,6 @@ class ConfigLoader:
     @property
     def summary_every_turns(self):
         return self.get_int("conversation", "summary_every_turns")
-
 
     # -- MCP
     @property

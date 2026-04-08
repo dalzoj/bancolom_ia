@@ -9,12 +9,11 @@ from backend.core.models import LLMResponse, LLMToolCall, LLMFirstTurnResponse
 
 
 class CohereHandler(LLMInterface):
-
     def __init__(self):
-        self._client=ClientV2(api_key=config.env("COHERE_API_KEY"))
-        self._model=config.llm_model
-        self._max_tokens=config.llm_max_tokens
-        self._temperature=config.llm_temperature
+        self._client = ClientV2(api_key=config.env("COHERE_API_KEY"))
+        self._model = config.llm_model
+        self._max_tokens = config.llm_max_tokens
+        self._temperature = config.llm_temperature
 
     def health(self):
         try:
@@ -26,21 +25,21 @@ class CohereHandler(LLMInterface):
             return False
 
     def generate(self, system_prompt, user_prompt):
-        response=self._client.chat(
+        response = self._client.chat(
             model=self._model,
             max_tokens=self._max_tokens,
             temperature=self._temperature,
-            messages = [
+            messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ]
+                {"role": "user", "content": user_prompt},
+            ],
         )
 
         return LLMResponse(
             content=response.message.content[0].text,
             input_tokens=response.usage.billed_units.input_tokens,
             output_tokens=response.usage.billed_units.output_tokens,
-            model=self._model
+            model=self._model,
         )
 
     def first_step_generate(self, system_prompt, messages, tools):
@@ -49,9 +48,7 @@ class CohereHandler(LLMInterface):
             max_tokens=self._max_tokens,
             temperature=self._temperature,
             tools=tools,
-            messages=[
-                {"role": "system", "content": system_prompt}
-                ] + messages,
+            messages=[{"role": "system", "content": system_prompt}] + messages,
         )
 
         tool_calls = None
@@ -86,9 +83,7 @@ class CohereHandler(LLMInterface):
             max_tokens=self._max_tokens,
             temperature=self._temperature,
             tools=tools,
-            messages=[
-                {"role": "system", "content": system_prompt}
-                ] + messages,
+            messages=[{"role": "system", "content": system_prompt}] + messages,
         )
 
         return LLMResponse(

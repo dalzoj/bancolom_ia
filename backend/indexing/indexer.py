@@ -9,36 +9,44 @@ _CHUNK_OVERLAP = 50
 
 
 class Indexer:
-
     def __init__(self):
         self._embedder = EmbeddingFactory.create()
         self._vector_db = VectorDBFactory.create()
         if not self._embedder.health() or not self._vector_db.health():
-            raise RuntimeError("ERROR: No se puede continuar, uno o más servicios no están disponibles.")
+            raise RuntimeError(
+                "ERROR: No se puede continuar, uno o más servicios no están disponibles."
+            )
 
-    def _generate_chunks_data(self, data, chunk_size = _CHUNK_SIZE, overlap = _CHUNK_OVERLAP):
+    def _generate_chunks_data(
+        self, data, chunk_size=_CHUNK_SIZE, overlap=_CHUNK_OVERLAP
+    ):
         chunks = []
 
         for page in data:
             words = page.clean_text.split()
-            start=0
-            chunk_index=0
+            start = 0
+            chunk_index = 0
 
             while start < len(words):
-                chunk_text = " ".join(words[start:start + chunk_size])
-                chunks.append(ChunkData(
-                    url=page.url,
-                    title=page.title,
-                    extracted_date=page.extracted_date,
-                    chunk_index=chunk_index,
-                    chunk_text=chunk_text,
-                    category=page.category,
-                ))
+                chunk_text = " ".join(words[start: start + chunk_size])
+                chunks.append(
+                    ChunkData(
+                        url=page.url,
+                        title=page.title,
+                        extracted_date=page.extracted_date,
+                        chunk_index=chunk_index,
+                        chunk_text=chunk_text,
+                        category=page.category,
+                    )
+                )
 
                 start += chunk_size - overlap
                 chunk_index += 1
 
-        print(f"INFO: Se generaron {len(chunks)} chunks de {len(data)} elementos.", file=sys.stderr)
+        print(
+            f"INFO: Se generaron {len(chunks)} chunks de {len(data)} elementos.",
+            file=sys.stderr,
+        )
         return chunks
 
     def _index(self, chunks_data):
@@ -73,10 +81,15 @@ class Indexer:
                 ]
 
                 self._vector_db.upsert(vectors)
-                print(f"INFO: Indexados {len(vectors)} chunks para {url}", file=sys.stderr)
+                print(
+                    f"INFO: Indexados {len(vectors)} chunks para {url}", file=sys.stderr
+                )
 
             except Exception as e:
-                print(f"ERROR: Falló la indexación de {url}, continuando con el siguiente. Detalle: {e}", file=sys.stderr)
+                print(
+                    f"ERROR: Falló la indexación de {url}, continuando con el siguiente. Detalle: {e}",
+                    file=sys.stderr,
+                )
                 continue
 
     def index_data(self, data):

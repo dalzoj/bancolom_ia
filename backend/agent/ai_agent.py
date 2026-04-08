@@ -24,16 +24,14 @@ Tu tarea es resumir la conversación en máximo 5 oraciones, capturando:
 Responde ÚNICAMENTE con el resumen, sin introducción ni comentarios adicionales.
 """.strip()
 
-class AIAgent:
 
+class AIAgent:
     def __init__(self):
         self._llm = LLMFactory.create()
         self._db = DBFactory.create()
         self._prompt_loader = PromptLoader()
         self._mcp_server_params = StdioServerParameters(
-            command=sys.executable,
-            args=[config.mcp_server_path],
-            env=os.environ
+            command=sys.executable, args=[config.mcp_server_path], env=os.environ
         )
 
         if not self._llm.health():
@@ -54,7 +52,8 @@ class AIAgent:
                         "function": {
                             "name": tool.name,
                             "description": tool.description or "",
-                            "parameters": tool.inputSchema or {
+                            "parameters": tool.inputSchema
+                            or {
                                 "type": "object",
                                 "properties": {},
                             },
@@ -66,7 +65,9 @@ class AIAgent:
                 # Ejecutar las tool_calls si las hay
                 tool_results = []
                 for tool_call in tool_calls_to_execute:
-                    raw = await session.call_tool(tool_call.tool_name, tool_call.tool_args)
+                    raw = await session.call_tool(
+                        tool_call.tool_name, tool_call.tool_args
+                    )
                     if raw.isError:
                         payload = {
                             "error": f"El servidor MCP reportó un error en '{tool_call.tool_name}'.",
@@ -82,35 +83,39 @@ class AIAgent:
 
         messages = list(base_messages)
 
-        messages.append({
-            "role": "assistant",
-            "tool_calls": [
-                {
-                    "id": tc.id,
-                    "type": "function",
-                    "function": {
-                        "name": tc.tool_name,
-                        "arguments": json.dumps(tc.tool_args, ensure_ascii=False),
-                    },
-                }
-                for tc in first_response.tool_calls
-            ],
-            "tool_plan": first_response.tool_plan,
-        })
+        messages.append(
+            {
+                "role": "assistant",
+                "tool_calls": [
+                    {
+                        "id": tc.id,
+                        "type": "function",
+                        "function": {
+                            "name": tc.tool_name,
+                            "arguments": json.dumps(tc.tool_args, ensure_ascii=False),
+                        },
+                    }
+                    for tc in first_response.tool_calls
+                ],
+                "tool_plan": first_response.tool_plan,
+            }
+        )
 
         for tc, result in tool_results:
-            messages.append({
-                "role": "tool",
-                "tool_call_id": tc.id,
-                "content": json.dumps(result, ensure_ascii=False),
-            })
+            messages.append(
+                {
+                    "role": "tool",
+                    "tool_call_id": tc.id,
+                    "content": json.dumps(result, ensure_ascii=False),
+                }
+            )
 
         return messages
 
     def _save_message(self, message):
         self._db.execute_query(
             f"""
-            INSERT INTO {config.sql_lite_conversation_table} VALUES (
+                INSERT INTO {config.sql_lite_conversation_table} VALUES (
                 :conversation_id,
                 :message_id,
                 :message_timestamp,
@@ -122,19 +127,20 @@ class AIAgent:
                 :prompt_version,
                 :interaction_time
             )
-            """, {
-            "conversation_id": message.conversation_id,
-            "message_id": message.message_id,
-            "message_timestamp": message.message_timestamp,
-            "human_message": message.human_message,
-            "llm_response": message.llm_response,
-            "input_tokens": message.input_tokens,
-            "output_tokens": message.output_tokens,
-            "model_name": message.model_name,
-            "prompt_version": message.prompt_version,
-            "interaction_time": message.interaction_time
-
-        })
+            """,
+            {
+                "conversation_id": message.conversation_id,
+                "message_id": message.message_id,
+                "message_timestamp": message.message_timestamp,
+                "human_message": message.human_message,
+                "llm_response": message.llm_response,
+                "input_tokens": message.input_tokens,
+                "output_tokens": message.output_tokens,
+                "model_name": message.model_name,
+                "prompt_version": message.prompt_version,
+                "interaction_time": message.interaction_time,
+            },
+        )
 
     def _get_next_message_id(self, conversation_id):
         result = self._db.execute_query(
@@ -169,7 +175,9 @@ class AIAgent:
         for conversation in result:
             conversation_elements.append(f"Usuario: {conversation['human_message']}")
             if conversation["llm_response"]:
-                conversation_elements.append(f"Asistente: {conversation['llm_response']}")
+                conversation_elements.append(
+                    f"Asistente: {conversation['llm_response']}"
+                )
 
         return "\n".join(conversation_elements)
 
@@ -200,12 +208,14 @@ class AIAgent:
                 summary_text = excluded.summary_text,
                 interactions = excluded.interactions,
                 update_date = excluded.update_date
-            """, {
-            "conversation_id": conversation_id,
-            "summary_text": summary_text,
-            "interactions": interactions,
-            "update_date": datetime.now(timezone.utc).isoformat(),
-        })
+            """,
+            {
+                "conversation_id": conversation_id,
+                "summary_text": summary_text,
+                "interactions": interactions,
+                "update_date": datetime.now(timezone.utc).isoformat(),
+            },
+        )
 
     def _should_summarize(self, conversation_id, current_message_id):
         _, interactions = self._get_summary(conversation_id)
@@ -237,7 +247,10 @@ class AIAgent:
             summary_text=response.content,
             interactions=current_message_id,
         )
-        print(f"INFO: Resumen de mediano plazo generado para sesión {conversation_id} ({current_message_id} turnos).", file=sys.stderr)
+        print(
+            f"INFO: Resumen de mediano plazo generado para sesión {conversation_id} ({current_message_id} turnos).",
+            file=sys.stderr,
+        )
 
     def _format_context(self, results):
         if not results:
@@ -246,14 +259,11 @@ class AIAgent:
         elements = []
 
         for i, item in enumerate(results, start=1):
-            url   = item["url"] if isinstance(item, dict) else item.url
+            url = item["url"] if isinstance(item, dict) else item.url
             score = item["score"] if isinstance(item, dict) else item.score
-            text  = item["chunk_text"] if isinstance(item, dict) else item.chunk_text
+            text = item["chunk_text"] if isinstance(item, dict) else item.chunk_text
             elements.append(
-                f"-- Fuente {i} --\n"
-                f"URL: {url}\n"
-                f"Score: {score:.2f}\n"
-                f"{text.strip()}"
+                f"-- Fuente {i} --\nURL: {url}\nScore: {score:.2f}\n{text.strip()}"
             )
         return "\n\n".join(elements)
 
@@ -276,7 +286,7 @@ class AIAgent:
 
         # Construir el mensaje de usuario con historial embebido
         system_prompt = self._prompt_loader.system_prompt
-        user_content  = self._prompt_loader.create_user_prompt(
+        user_content = self._prompt_loader.create_user_prompt(
             summary=summary,
             history=history,
             question=question,
@@ -284,7 +294,9 @@ class AIAgent:
         messages = [{"role": "user", "content": user_content}]
 
         # Primer llamado: el LLM decide qué tool invocar o responde directo
-        first_response = self._llm.first_step_generate(system_prompt, messages, mcp_tools)
+        first_response = self._llm.first_step_generate(
+            system_prompt, messages, mcp_tools
+        )
 
         retrieval_results = []
 
@@ -297,8 +309,12 @@ class AIAgent:
                     retrieval_results.extend(result.get("results", []))
 
             # Segundo llamado: el LLM genera la respuesta final con los resultados
-            messages_with_results = self._build_tool_messages(messages, first_response, tool_results)
-            llm_response = self._llm.final_step_generate(system_prompt, messages_with_results, mcp_tools)
+            messages_with_results = self._build_tool_messages(
+                messages, first_response, tool_results
+            )
+            llm_response = self._llm.final_step_generate(
+                system_prompt, messages_with_results, mcp_tools
+            )
 
             # Acumular tokens totales
             llm_response = LLMResponse(
@@ -307,7 +323,6 @@ class AIAgent:
                 output_tokens=first_response.output_tokens + llm_response.output_tokens,
                 model=llm_response.model,
             )
-
 
         else:
             # Respuesta sencilla del LLM
@@ -346,6 +361,6 @@ class AIAgent:
         )
 
         return {
-            "answer":  llm_response.content,
+            "answer": llm_response.content,
             "sources": sources,
         }

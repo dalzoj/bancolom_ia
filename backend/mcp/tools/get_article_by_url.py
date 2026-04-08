@@ -11,6 +11,7 @@ _ALLOWED_DOMAIN = "https://www.bancolombia.com/"
 _db = None
 _db_lock = threading.Lock()
 
+
 def _get_db() -> DBInterface:
     global _db
     if _db is None:
@@ -18,6 +19,7 @@ def _get_db() -> DBInterface:
             if _db is None:
                 _db = DBFactory.create()
     return _db
+
 
 def get_article_by_url(url: str) -> dict:
     """
@@ -35,7 +37,10 @@ def get_article_by_url(url: str) -> dict:
         En caso de no encontrarlo o de error retorna un diccionario
         con clave 'error'.
     """
-    print(f"INFO: Ejecutando búsqueda de contenido (get_article_by_url) en {url}.", file=sys.stderr)
+    print(
+        f"INFO: Ejecutando búsqueda de contenido (get_article_by_url) en {url}.",
+        file=sys.stderr,
+    )
 
     if not isinstance(url, str):
         return {"error": "El parámetro 'url' debe ser una cadena de texto."}
@@ -52,7 +57,6 @@ def get_article_by_url(url: str) -> dict:
         return {"error": f"La URL debe pertenecer al dominio '{_ALLOWED_DOMAIN}'."}
 
     try:
-
         db = _get_db()
         rows = db.execute_query(
             f"""
@@ -61,25 +65,32 @@ def get_article_by_url(url: str) -> dict:
             WHERE url = ?
             LIMIT 1
             """,
-            (url,)
+            (url,),
         )
 
         if not rows:
-            return {"error": f"No se encontró ningún artículo indexado con la URL: {url}"}
+            return {
+                "error": f"No se encontró ningún artículo indexado con la URL: {url}"
+            }
 
-        print(f"INFO: Se ha retornado {len(rows)} registros de información.", file=sys.stderr)
+        print(
+            f"INFO: Se ha retornado {len(rows)} registros de información.",
+            file=sys.stderr,
+        )
 
         row = rows[0]
         return {
             "url": row["url"],
-            "title":  row["title"],
+            "title": row["title"],
             "category": row["category"],
             "extracted_date": row["extracted_date"],
             "clean_text": row["clean_text"],
         }
 
     except TimeoutError as e:
-        return {"error": f"Tiempo de espera agotado al consultar la base de datos: {str(e)}"}
+        return {
+            "error": f"Tiempo de espera agotado al consultar la base de datos: {str(e)}"
+        }
 
     except Exception as e:
         return {"error": f"Error al recuperar el artículo: {str(e)}"}

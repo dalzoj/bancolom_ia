@@ -11,7 +11,6 @@ _UPSERT_BATCH_SIZE = 100
 
 
 class PineconeHandler(VectorDBInterface):
-
     def __init__(self):
         self._client = Pinecone(api_key=config.env("PINECONE_API_KEY"))
         self._index_name = config.vector_db_index
@@ -23,12 +22,15 @@ class PineconeHandler(VectorDBInterface):
         existing = [i.name for i in self._client.list_indexes().indexes]
         if self._index_name not in existing:
             self._client.create_index(
-                name = self._index_name,
-                dimension = self._dimension,
-                metric = self._metric,
-                spec = ServerlessSpec(cloud=_PINECONE_CLOUD, region=_PINECONE_REGION)
+                name=self._index_name,
+                dimension=self._dimension,
+                metric=self._metric,
+                spec=ServerlessSpec(cloud=_PINECONE_CLOUD, region=_PINECONE_REGION),
             )
-            print(f"INFO: Índice '{self._index_name}' creado con dimensión {self._dimension}.", file=sys.stderr)
+            print(
+                f"INFO: Índice '{self._index_name}' creado con dimensión {self._dimension}.",
+                file=sys.stderr,
+            )
         else:
             print(f"INFO: Índice '{self._index_name}' encontrado.", file=sys.stderr)
 
@@ -64,12 +66,23 @@ class PineconeHandler(VectorDBInterface):
             index = self._get_index_client()
             total_batches = -(-len(vectors) // _UPSERT_BATCH_SIZE)
 
-            for batch_num, start in enumerate(range(0, len(vectors), _UPSERT_BATCH_SIZE), start=1):
-                batch = [self.to_pinecone_format(v) for v in vectors[start:start + _UPSERT_BATCH_SIZE]]
+            for batch_num, start in enumerate(
+                range(0, len(vectors), _UPSERT_BATCH_SIZE), start=1
+            ):
+                batch = [
+                    self.to_pinecone_format(v)
+                    for v in vectors[start: start + _UPSERT_BATCH_SIZE]
+                ]
                 index.upsert(vectors=batch)
-                print(f"INFO: Insertado lote {batch_num} de {total_batches}", file=sys.stderr)
+                print(
+                    f"INFO: Insertado lote {batch_num} de {total_batches}",
+                    file=sys.stderr,
+                )
 
-            print(f"INFO: {len(vectors)} vectores insertados correctamente.", file=sys.stderr)
+            print(
+                f"INFO: {len(vectors)} vectores insertados correctamente.",
+                file=sys.stderr,
+            )
         except Exception as e:
             print(f"ERROR: No se pudo realizar el upsert — {e}", file=sys.stderr)
 
@@ -101,7 +114,10 @@ class PineconeHandler(VectorDBInterface):
                 top_k=top_k,
                 include_metadata=True,
             )
-            print(f"INFO: Se han recuperado {len(results['matches'])} elementos.", file=sys.stderr)
+            print(
+                f"INFO: Se han recuperado {len(results['matches'])} elementos.",
+                file=sys.stderr,
+            )
 
             return [
                 {
@@ -111,10 +127,13 @@ class PineconeHandler(VectorDBInterface):
                     "chunk_index": match["metadata"].get("chunk_index", 0),
                     "extracted_date": match["metadata"].get("extracted_date", ""),
                     "category": match["metadata"].get("category", "general"),
-                    "score": round(match["score"], 4)
+                    "score": round(match["score"], 4),
                 }
                 for match in results["matches"]
             ]
         except Exception as e:
-            print(f"ERROR: No se pudo realizar la búsqueda semántica — {e}", file=sys.stderr)
+            print(
+                f"ERROR: No se pudo realizar la búsqueda semántica — {e}",
+                file=sys.stderr,
+            )
             return []

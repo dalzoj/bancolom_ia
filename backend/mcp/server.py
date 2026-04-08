@@ -6,12 +6,17 @@ from fastmcp import FastMCP
 
 from backend.core.config_loader import config
 from backend.factories.db_factory import DBFactory
-from backend.mcp.tools.search_knowledge_base import search_knowledge_base as _search_knowledge_base
-from backend.mcp.tools.get_article_by_url import get_article_by_url as _get_article_by_url
+from backend.mcp.tools.search_knowledge_base import (
+    search_knowledge_base as _search_knowledge_base,
+)
+from backend.mcp.tools.get_article_by_url import (
+    get_article_by_url as _get_article_by_url,
+)
 from backend.mcp.tools.list_categories import list_categories as _list_categories
 
 
 mcp = FastMCP(name="bancolombia-knowledge-base")
+
 
 @mcp.tool()
 def search_knowledge_base_tool(query: str) -> str:
@@ -114,7 +119,10 @@ def knowledgebase_stats():
         En caso de error retorna un campo 'error' con el detalle.
     """
 
-    print("INFO: Ejecutando estadísticas de base de conocimiento (knowledgebase_stats).", file=sys.stderr)
+    print(
+        "INFO: Ejecutando estadísticas de base de conocimiento (knowledgebase_stats).",
+        file=sys.stderr,
+    )
     try:
         db = DBFactory.create()
 

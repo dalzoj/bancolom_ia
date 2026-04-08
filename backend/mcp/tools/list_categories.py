@@ -9,6 +9,7 @@ from backend.interfaces.db_interface import DBInterface
 _db = None
 _db_lock = threading.Lock()
 
+
 def _get_db() -> DBInterface:
     global _db
     if _db is None:
@@ -16,6 +17,7 @@ def _get_db() -> DBInterface:
             if _db is None:
                 _db = DBFactory.create()
     return _db
+
 
 def list_categories() -> dict:
     """
@@ -48,7 +50,7 @@ def list_categories() -> dict:
         if not rows:
             return {
                 "message": "La base de conocimiento aún no contiene artículos indexados.",
-                "categories": []
+                "categories": [],
             }
 
         print(f"INFO: Se ha retornado {len(rows)} categorias.", file=sys.stderr)
@@ -56,16 +58,15 @@ def list_categories() -> dict:
         return {
             "total_categories": len(rows),
             "categories": [
-                {
-                    "category": row["category"],
-                    "total_articles": row["total"]
-                }
+                {"category": row["category"], "total_articles": row["total"]}
                 for row in rows
-            ]
+            ],
         }
 
     except TimeoutError as e:
-        return {"error": f"Tiempo de espera agotado al consultar la base de datos: {str(e)}"}
+        return {
+            "error": f"Tiempo de espera agotado al consultar la base de datos: {str(e)}"
+        }
 
     except Exception as e:
         return {"error": f"Error al listar categorías: {str(e)}"}
