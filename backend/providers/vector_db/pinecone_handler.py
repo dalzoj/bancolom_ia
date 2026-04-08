@@ -11,14 +11,14 @@ _UPSERT_BATCH_SIZE = 100
 
 
 class PineconeHandler(VectorDBInterface):
-    
+
     def __init__(self):
         self._client = Pinecone(api_key=config.env("PINECONE_API_KEY"))
         self._index_name = config.vector_db_index
         self._dimension = config.vector_db_dimension
         self._metric = config.vector_db_metric
         self._check_index()
-        
+
     def _check_index(self):
         existing = [i.name for i in self._client.list_indexes().indexes]
         if self._index_name not in existing:
@@ -31,10 +31,10 @@ class PineconeHandler(VectorDBInterface):
             print(f"INFO: Índice '{self._index_name}' creado con dimensión {self._dimension}.", file=sys.stderr)
         else:
             print(f"INFO: Índice '{self._index_name}' encontrado.", file=sys.stderr)
-            
+
     def _get_index_client(self):
         return self._client.Index(self._index_name)
-            
+
     @staticmethod
     def to_pinecone_format(vector):
         return {
@@ -49,7 +49,7 @@ class PineconeHandler(VectorDBInterface):
                 "category": vector.category,
             },
         }
-        
+
     def health(self):
         try:
             self._client.list_indexes()
@@ -58,8 +58,8 @@ class PineconeHandler(VectorDBInterface):
         except Exception as e:
             print(f"ERROR: Pinecone no disponible — {e}", file=sys.stderr)
             return False
-    
-    def upsert(self, vectors):        
+
+    def upsert(self, vectors):
         try:
             index = self._get_index_client()
             total_batches = -(-len(vectors) // _UPSERT_BATCH_SIZE)
@@ -92,9 +92,9 @@ class PineconeHandler(VectorDBInterface):
             print(f"INFO: Vectores eliminados con filtros {filters}", file=sys.stderr)
         except Exception as e:
             print(f"ERROR: No se pudo eliminar — {e}", file=sys.stderr)
-            
+
     def semantic_search(self, query_vector, top_k):
-        print(f"INFO: Realizando búsqueda semántica.", file=sys.stderr)
+        print("INFO: Realizando búsqueda semántica.", file=sys.stderr)
         try:
             results = self._get_index_client().query(
                 vector=query_vector,

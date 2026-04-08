@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from backend.core.models import PrincipalData
 
@@ -24,7 +24,7 @@ def _pagina(texto):
         clean_text=texto,
         category="creditos",
     )
-    
+
 
 def test_texto_largo_genera_mas_de_un_chunk(indexer):
     texto = " ".join(["palabra"] * 800)

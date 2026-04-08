@@ -15,15 +15,15 @@ class Indexer:
         self._vector_db = VectorDBFactory.create()
         if not self._embedder.health() or not self._vector_db.health():
             raise RuntimeError("ERROR: No se puede continuar, uno o más servicios no están disponibles.")
-        
+
     def _generate_chunks_data(self, data, chunk_size = _CHUNK_SIZE, overlap = _CHUNK_OVERLAP):
         chunks = []
-        
+
         for page in data:
             words = page.clean_text.split()
             start=0
             chunk_index=0
-            
+
             while start < len(words):
                 chunk_text = " ".join(words[start:start + chunk_size])
                 chunks.append(ChunkData(
@@ -34,15 +34,15 @@ class Indexer:
                     chunk_text=chunk_text,
                     category=page.category,
                 ))
-                
+
                 start += chunk_size - overlap
                 chunk_index += 1
-        
+
         print(f"INFO: Se generaron {len(chunks)} chunks de {len(data)} elementos.", file=sys.stderr)
         return chunks
-    
+
     def _index(self, chunks_data):
-        
+
         # Agrupar chunks por URL
         chunks_by_url = {}
         for chunk in chunks_data:
@@ -78,9 +78,9 @@ class Indexer:
             except Exception as e:
                 print(f"ERROR: Falló la indexación de {url}, continuando con el siguiente. Detalle: {e}", file=sys.stderr)
                 continue
-    
+
     def index_data(self, data):
-        print(f"INFO: Indexación de datos.", file=sys.stderr)
-        
+        print("INFO: Indexación de datos.", file=sys.stderr)
+
         chunk_data = self._generate_chunks_data(data)
         self._index(chunk_data)

@@ -25,7 +25,7 @@ Responde ÚNICAMENTE con el resumen, sin introducción ni comentarios adicionale
 """.strip()
 
 class AIAgent:
-    
+
     def __init__(self):
         self._llm = LLMFactory.create()
         self._db = DBFactory.create()
@@ -35,10 +35,10 @@ class AIAgent:
             args=[config.mcp_server_path],
             env=os.environ
         )
-        
+
         if not self._llm.health():
             raise RuntimeError("El servicio LLM no está disponible.")
-    
+
     # -- MPC Helpers
 
     async def _run_mcp_turn(self, tool_calls_to_execute):
@@ -77,7 +77,7 @@ class AIAgent:
                     tool_results.append((tool_call, payload))
 
                 return mcp_tools, tool_results
-    
+
     def _build_tool_messages(self, base_messages, first_response, tool_results):
 
         messages = list(base_messages)
@@ -135,7 +135,7 @@ class AIAgent:
             "interaction_time": message.interaction_time
 
         })
-        
+
     def _get_next_message_id(self, conversation_id):
         result = self._db.execute_query(
             f"""
@@ -146,7 +146,7 @@ class AIAgent:
             (conversation_id,),
         )
         return result[0]["next_id"]
-    
+
     def _get_history(self, conversation_id):
         limit = config.conversation_history_limit
         result = self._db.execute_query(
@@ -159,20 +159,20 @@ class AIAgent:
             """,
             (conversation_id, limit),
         )
- 
+
         if not result:
             return None
 
         result = list(reversed(result))
- 
+
         conversation_elements = []
         for conversation in result:
             conversation_elements.append(f"Usuario: {conversation['human_message']}")
             if conversation["llm_response"]:
                 conversation_elements.append(f"Asistente: {conversation['llm_response']}")
- 
+
         return "\n".join(conversation_elements)
-    
+
     def _get_summary(self, conversation_id):
         result = self._db.execute_query(
             f"""
@@ -183,12 +183,12 @@ class AIAgent:
             """,
             (conversation_id,),
         )
-        
+
         if not result:
             return None, 0
-        
+
         return result[0]["summary_text"], result[0]["interactions"]
-    
+
     def _save_summary(self, conversation_id, summary_text, interactions):
         self._db.execute_query(
             f"""
@@ -206,12 +206,12 @@ class AIAgent:
             "interactions": interactions,
             "update_date": datetime.now(timezone.utc).isoformat(),
         })
-    
+
     def _should_summarize(self, conversation_id, current_message_id):
         _, interactions = self._get_summary(conversation_id)
         every_n = config.summary_every_turns
         return current_message_id > 0 and current_message_id % every_n == 0
-    
+
     def _create_summary(self, conversation_id, current_message_id):
         rows = self._db.execute_query(
             f"""
@@ -244,7 +244,7 @@ class AIAgent:
             return None
 
         elements = []
-        
+
         for i, item in enumerate(results, start=1):
             url   = item["url"] if isinstance(item, dict) else item.url
             score = item["score"] if isinstance(item, dict) else item.score
@@ -258,10 +258,10 @@ class AIAgent:
         return "\n\n".join(elements)
 
     def call(self, question, conversation_id):
-        print(f"INFO: Llamado al modelo generativo.", file=sys.stderr)
+        print("INFO: Llamado al modelo generativo.", file=sys.stderr)
 
         time_start = time.perf_counter()
-        
+
         # Calcular el id del próximo mensaje antes de persistir
         next_message_id = self._get_next_message_id(conversation_id)
 
@@ -285,13 +285,13 @@ class AIAgent:
 
         # Primer llamado: el LLM decide qué tool invocar o responde directo
         first_response = self._llm.first_step_generate(system_prompt, messages, mcp_tools)
-        
+
         retrieval_results = []
 
         if first_response.has_tool_calls:
             # Ejecución de tools
             _, tool_results = asyncio.run(self._run_mcp_turn(first_response.tool_calls))
-        
+
             for tool_call, result in tool_results:
                 if tool_call.tool_name == "search_knowledge_base_tool":
                     retrieval_results.extend(result.get("results", []))
@@ -299,7 +299,7 @@ class AIAgent:
             # Segundo llamado: el LLM genera la respuesta final con los resultados
             messages_with_results = self._build_tool_messages(messages, first_response, tool_results)
             llm_response = self._llm.final_step_generate(system_prompt, messages_with_results, mcp_tools)
-            
+
             # Acumular tokens totales
             llm_response = LLMResponse(
                 content=llm_response.content,
@@ -307,8 +307,8 @@ class AIAgent:
                 output_tokens=first_response.output_tokens + llm_response.output_tokens,
                 model=llm_response.model,
             )
-            
-            
+
+
         else:
             # Respuesta sencilla del LLM
             llm_response = LLMResponse(

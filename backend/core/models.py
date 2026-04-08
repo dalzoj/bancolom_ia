@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Any
 
 @dataclass
 class PrincipalData:
@@ -7,7 +6,7 @@ class PrincipalData:
     title: str
     extracted_date: str
     clean_text: str
-    category: str 
+    category: str
 
 
 @dataclass
@@ -18,8 +17,8 @@ class ChunkData:
     chunk_index: int
     chunk_text: str
     category: str
-    
-    
+
+
 @dataclass
 class VectorData:
     id: str
@@ -31,7 +30,7 @@ class VectorData:
     chunk_text: str
     category: str
 
-        
+
 @dataclass
 class SearchResult:
     url: str
@@ -49,8 +48,8 @@ class LLMResponse:
     input_tokens: int
     output_tokens: int
     model: str
-    
-    
+
+
 @dataclass
 class LLMToolCall:
     id: str
@@ -66,7 +65,7 @@ class LLMFirstTurnResponse:
     input_tokens: int
     output_tokens: int
     model: str
-    
+
     @property
     def has_tool_calls(self):
         return bool(self.tool_calls)

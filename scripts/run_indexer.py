@@ -5,7 +5,7 @@ from backend.core.models import PrincipalData
 
 
 def main():
-    
+
     # Conectar con Base de Datos
     db = DBFactory.create()
     data = db.execute_query(
@@ -24,11 +24,11 @@ def main():
         for row in data
     ]
     print(f"INFO: Se han recuperado {len(data)} elementos a indexar.")
-    
+
     # Ejcutar proceso de indexar
     indexer = Indexer()
     indexer.index_data(data)
-    
+
 
 if __name__ == "__main__":
     main()

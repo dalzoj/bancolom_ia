@@ -18,25 +18,25 @@ def search_knowledge_base_tool(query: str) -> str:
     """
     Tool que busca documentos relevantes en la base de conocimiento
     usando búsqueda semántica.
-    
+
     Se usa cuando el usuario haga preguntas sobre productos, servicios,
     condiciones, requisitos o cualquier información publicada en el sitio
     web de Bancolombia para personas.
-    
+
     Retorna los fragmentos más relevantes junto con su URL de origen,
     categoría y score de relevancia.
-    
+
     Args:
         query: Pregunta o consulta en lenguaje natural del usuario.
                Debe ser descriptiva para maximizar la precisión semántica.
                Ejemplo: '¿Cuáles son los requisitos para un crédito de vivienda?'
-    
+
     Returns:
         JSON con 'total' y lista de 'results', donde cada resultado incluye: url, title, category,
         score (0-1), chunk_text, chunk_index y extracted_date.
         En caso de error retorna un campo 'error'.
     """
-    
+
     result = _search_knowledge_base(query)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
@@ -45,24 +45,24 @@ def search_knowledge_base_tool(query: str) -> str:
 def get_article_by_url_tool(url: str) -> str:
     """
     Tool que recupera el contenido completo de un artículo indexado a partir de su URL.
-    
+
     Se usa cuando el usuario solicite información detallada de una página
     específica de Bancolombia, cuando quiera leer un artículo completo,
     o cuando necesites ampliar la información de un resultado obtenido
     con search_knowledge_base_tool.
-    
+
     La URL debe pertenecer al dominio www.bancolombia.com/personas.
-    
+
     Args:
         url: URL exacta de la página de Bancolombia indexada en la base de
              conocimiento.
              Ejemplo: 'https://www.bancolombia.com/personas/creditos/vivienda'
-    
+
     Returns:
         JSON con los campos: url, title, category, extracted_date y clean_text con el contenido completo del artículo.
         En caso de no encontrarlo retorna un campo 'error'.
     """
-    
+
     result = _get_article_by_url(url)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
@@ -72,19 +72,19 @@ def list_categories_tool() -> str:
     """
     Tool que lista todas las categorías de contenido disponibles en la base de conocimiento,
     junto con el número de artículos por categoría.
-    
+
     Se usa cuando el usuario pregunte qué temas o secciones cubre el asistente,
     cuando necesites orientar al usuario sobre qué información está disponible,
     o cuando quieras filtrar una búsqueda posterior por categoría relevante.
-    
+
     No recibe parámetros.
-    
+
     Returns:
         JSON con 'total_categories' y lista de 'categories', donde cada elemento
         incluye 'category' (nombre de la categoría) y 'total_articles' (cantidad de artículos indexados en esa categoría).
         En caso de error retorna un campo 'error'.
     """
-    
+
     result = _list_categories()
     return json.dumps(result, ensure_ascii=False, indent=2)
 
@@ -113,8 +113,8 @@ def knowledgebase_stats():
         - generated_date (str): fecha ISO 8601 en que se generó esta respuesta.
         En caso de error retorna un campo 'error' con el detalle.
     """
-    
-    print(f"INFO: Ejecutando estadísticas de base de conocimiento (knowledgebase_stats).", file=sys.stderr)
+
+    print("INFO: Ejecutando estadísticas de base de conocimiento (knowledgebase_stats).", file=sys.stderr)
     try:
         db = DBFactory.create()
 

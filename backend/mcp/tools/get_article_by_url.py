@@ -23,12 +23,12 @@ def get_article_by_url(url: str) -> dict:
     """
     Recupera el contenido completo de un artículo indexado buscándolo
     por su URL exacta en la base de datos relacional (SQLite).
- 
+
     Args:
         url: URL exacta de una página de Bancolombia que haya sido
              indexada previamente. Debe comenzar con 'http' y pertenecer
              al dominio bancolombia.com.
- 
+
     Returns:
         Diccionario con los campos: url, title, category, extracted_date
         y clean_text con el contenido completo del artículo.
@@ -36,23 +36,23 @@ def get_article_by_url(url: str) -> dict:
         con clave 'error'.
     """
     print(f"INFO: Ejecutando búsqueda de contenido (get_article_by_url) en {url}.", file=sys.stderr)
-    
+
     if not isinstance(url, str):
         return {"error": "El parámetro 'url' debe ser una cadena de texto."}
- 
+
     url = url.strip()
- 
+
     if not url:
         return {"error": "La URL no puede estar vacía."}
-    
+
     if not url.startswith("http"):
         return {"error": "La URL debe comenzar con 'https://'."}
-    
+
     if _ALLOWED_DOMAIN not in url:
         return {"error": f"La URL debe pertenecer al dominio '{_ALLOWED_DOMAIN}'."}
 
     try:
-        
+
         db = _get_db()
         rows = db.execute_query(
             f"""
@@ -66,7 +66,7 @@ def get_article_by_url(url: str) -> dict:
 
         if not rows:
             return {"error": f"No se encontró ningún artículo indexado con la URL: {url}"}
-        
+
         print(f"INFO: Se ha retornado {len(rows)} registros de información.", file=sys.stderr)
 
         row = rows[0]
@@ -80,6 +80,6 @@ def get_article_by_url(url: str) -> dict:
 
     except TimeoutError as e:
         return {"error": f"Tiempo de espera agotado al consultar la base de datos: {str(e)}"}
-    
+
     except Exception as e:
         return {"error": f"Error al recuperar el artículo: {str(e)}"}

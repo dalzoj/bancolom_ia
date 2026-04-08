@@ -12,16 +12,16 @@ class Retriever:
         self._embedder = EmbeddingFactory.create()
         self._vector_db = VectorDBFactory.create()
         self._top_k = config.vector_db_top_k
-        
+
         self._reranking_enabled = config.reranking_enabled
         self._reranker = RerankerFactory.create() if self._reranking_enabled else None
         self._reranking_top_n = config.reranking_top_n
-        
+
         if not self._embedder.health() or not self._vector_db.health():
             raise RuntimeError("ERROR: No se puede continuar, uno o más servicios no están disponibles.")
-        
+
     def _rerank(self, query, results):
-        print(f"INFO: Aplicando reranking.", file=sys.stderr)
+        print("INFO: Aplicando reranking.", file=sys.stderr)
         if not results or self._reranker is None:
             return results
 
@@ -45,10 +45,10 @@ class Retriever:
             return results[: self._reranking_top_n]
 
     def retrieve(self, query):
-        print(f"INFO: Realizando recuperación de información", file=sys.stderr)
+        print("INFO: Realizando recuperación de información", file=sys.stderr)
         query = query.strip()
         query_embedding = self._embedder.embed_query(query)
-        
+
         results = self._vector_db.semantic_search(query_embedding, self._top_k)
 
         if self._reranking_enabled:

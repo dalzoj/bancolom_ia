@@ -42,7 +42,7 @@ class CohereHandler(LLMInterface):
             output_tokens=response.usage.billed_units.output_tokens,
             model=self._model
         )
-        
+
     def first_step_generate(self, system_prompt, messages, tools):
         response = self._client.chat(
             model=self._model,
@@ -53,9 +53,9 @@ class CohereHandler(LLMInterface):
                 {"role": "system", "content": system_prompt}
                 ] + messages,
         )
-        
+
         tool_calls = None
-        
+
         if response.message.tool_calls:
             tool_calls = [
                 LLMToolCall(
@@ -65,12 +65,12 @@ class CohereHandler(LLMInterface):
                 )
                 for tc in response.message.tool_calls
             ]
-        
+
         content = None
-        
+
         if response.message.content:
-            content = response.message.content[0].text           
-        
+            content = response.message.content[0].text
+
         return LLMFirstTurnResponse(
             tool_calls=tool_calls,
             tool_plan=response.message.tool_plan,
@@ -79,7 +79,7 @@ class CohereHandler(LLMInterface):
             output_tokens=response.usage.billed_units.output_tokens,
             model=self._model,
         )
-    
+
     def final_step_generate(self, system_prompt, messages, tools):
         response = self._client.chat(
             model=self._model,
@@ -90,7 +90,7 @@ class CohereHandler(LLMInterface):
                 {"role": "system", "content": system_prompt}
                 ] + messages,
         )
-        
+
         return LLMResponse(
             content=response.message.content[0].text,
             input_tokens=response.usage.billed_units.input_tokens,

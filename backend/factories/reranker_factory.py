@@ -6,7 +6,7 @@ class RerankerFactory:
     @staticmethod
     def create():
         provider = config.reranking_provider
-        
+
         if provider == "cohere":
             from backend.providers.reranker.cohere_reranker_handler import CohereRerankerHandler
             return CohereRerankerHandler()
