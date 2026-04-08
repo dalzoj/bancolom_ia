@@ -22,7 +22,7 @@ jobs:
         run: pip install flake8
 
       - name: Ejecutar flake8
-        run: flake8 backend/ frontend/ scripts/ --max-line-length=120 --ignore=E501,W503
+        run: flake8 backend/ frontend/ scripts/ utils/ --ignore=E501,W503
 
       - name: Instalar Poetry
         run: pip install poetry==2.1.1
