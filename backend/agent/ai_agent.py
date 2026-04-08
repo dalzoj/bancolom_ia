@@ -2,6 +2,7 @@ import asyncio
 import json
 import sys
 import time
+import os
 from datetime import datetime, timezone
 
 from mcp import ClientSession, StdioServerParameters
@@ -32,6 +33,7 @@ class AIAgent:
         self._mcp_server_params = StdioServerParameters(
             command=sys.executable,
             args=[config.mcp_server_path],
+            env=os.environ
         )
         
         if not self._llm.health():

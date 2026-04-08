@@ -1,0 +1,40 @@
+services:
+
+  app:
+    build: .
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/app
+    volumes:
+      - storage:/app/.storage
+    restart: unless-stopped
+
+  scraper:
+    build: .
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/app
+    volumes:
+      - storage:/app/.storage
+    command: python scripts/run_scraper.py
+    profiles:
+      - pipeline
+
+  indexer:
+    build: .
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/app
+    volumes:
+      - storage:/app/.storage
+    command: python scripts/run_indexer.py
+    profiles:
+      - pipeline
+
+volumes:
+  storage:

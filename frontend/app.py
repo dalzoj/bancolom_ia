@@ -2,6 +2,7 @@ import asyncio
 import json
 import sys
 import time
+import os
 
 import streamlit as st
 from mcp import ClientSession, StdioServerParameters
@@ -18,6 +19,7 @@ async def _fetch_stats():
     params = StdioServerParameters(
         command=sys.executable,
         args=[config.mcp_server_path],
+        env=os.environ
     )
     async with stdio_client(params) as (read, write):
         async with ClientSession(read, write) as session:
